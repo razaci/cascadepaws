@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#0D7377">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Case Deck">
+<title>Cascade Paws · Case Deck</title>
+<style>
+  :root {
+    --teal: #0D7377;
+    --teal-d: #095456;
+    --navy: #142833;
+    --ink: #102028;
+    --cream: #F4EFE6;
+    --paper: #FFFBF4;
+    --gold: #C9A227;
+    --rose: #C45C4A;
+    --sage: #3E7C6A;
+    --ok: #2F7D5A;
+    --bad: #B34032;
+    --muted: #6B7280;
+    --shadow: 0 18px 40px rgba(16, 32, 40, .22);
+    --radius: 22px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; min-height: 100%;
+    font-family: "Trebuchet MS", "Avenir Next", "Segoe UI", sans-serif;
+    background:
+      radial-gradient(1200px 600px at 10% -10%, #1b4a4d 0%, transparent 50%),
+      radial-gradient(800px 500px at 110% 10%, #3a2a12 0%, transparent 46%),
+      var(--navy);
+    color: var(--cream);
+  }
+  body { padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+  button { font: inherit; }
+
+  .app { max-width: 480px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; }
+
+  /* screens */
+  .screen { display: none; flex: 1; flex-direction: column; padding: 18px 16px 20px; }
+  .screen.on { display: flex; }
+
+  .brand { letter-spacing: .16em; font-size: 11px; text-transform: uppercase; color: #9ad5d3; }
+  h1 { font-size: 34px; line-height: 1.05; margin: 8px 0 10px; letter-spacing: -.03em; }
+  .lede { color: #d7cbb8; font-size: 15px; line-height: 1.45; margin: 0 0 22px; }
+
+  .cta {
+    border: 0; border-radius: 16px; padding: 16px 18px;
+    background: var(--gold); color: #1b1406; font-weight: 800;
+    width: 100%; font-size: 17px; box-shadow: var(--shadow);
+  }
+  .cta.ghost {
+    background: transparent; color: var(--cream);
+    border: 1.5px solid rgba(244,239,230,.35); box-shadow: none; margin-top: 10px;
+  }
+  .cta:active { transform: scale(.98); }
+
+  .modes { display: grid; gap: 10px; margin: 18px 0 8px; }
+  .mode {
+    text-align: left; border: 1px solid rgba(244,239,230,.16);
+    background: rgba(255,251,244,.06); color: var(--cream);
+    border-radius: 16px; padding: 14px 14px 12px;
+  }
+  .mode b { display: block; font-size: 16px; margin-bottom: 3px; }
+  .mode span { font-size: 12px; color: #cbbfae; }
+  .mode.on { outline: 2px solid var(--gold); background: rgba(201,162,39,.12); }
+
+  /* top bar */
+  .hud {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; margin-bottom: 12px;
+  }
+  .pill {
+    background: rgba(255,251,244,.08); border: 1px solid rgba(244,239,230,.12);
+    border-radius: 999px; padding: 6px 10px; font-size: 12px;
+  }
+  .hud button.link {
+    background: none; border: 0; color: #9ad5d3; font-size: 13px; padding: 6px;
+  }
+
+  /* case card */
+  .stage { perspective: 1200px; flex: 0 0 auto; }
+  .case-wrap {
+    position: relative; height: 290px;
+  }
+  .case {
+    position: absolute; inset: 0;
+    border-radius: var(--radius);
+    background: var(--paper); color: var(--ink);
+    box-shadow: var(--shadow);
+    padding: 16px 16px 14px;
+    display: flex; flex-direction: column;
+    transform-origin: center;
+    animation: deal .45s ease;
+  }
+  @keyframes deal {
+    from { transform: translateY(24px) rotate(-3deg); opacity: 0; }
+    to { transform: none; opacity: 1; }
+  }
+  .case .row { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .avatar {
+    width: 54px; height: 54px; border-radius: 16px;
+    display: grid; place-items: center;
+    font-weight: 800; color: #fff; font-size: 20px;
+    flex: 0 0 54px;
+  }
+  .nm { font-size: 22px; font-weight: 800; letter-spacing: -.03em; margin: 0; }
+  .sig { font-size: 12px; color: #5b6570; margin: 2px 0 0; }
+  .chip {
+    font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+    padding: 4px 8px; border-radius: 999px; color: #fff;
+  }
+  .chip.d1 { background: #2F7D5A; }
+  .chip.d2 { background: #0D7377; }
+  .chip.d3 { background: #B5811A; }
+  .chip.d4 { background: #B34032; }
+  .ail {
+    margin: 12px 0 8px; font-size: 16px; font-weight: 800; line-height: 1.25;
+  }
+  .bg { font-size: 13px; color: #3d4a52; line-height: 1.4; flex: 1; }
+  .meta {
+    display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;
+  }
+  .meta i {
+    font-style: normal; font-size: 11px; background: #efe7d8;
+    border-radius: 999px; padding: 5px 8px; color: #3a2f1c;
+  }
+
+  .prompt { margin: 14px 0 8px; font-size: 13px; color: #d7cbb8; }
+  .prompt b { color: #fff; }
+
+  /* solution deck */
+  .deck-label { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9ad5d3; margin: 4px 2px 8px; }
+  .deck {
+    display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 14px;
+    scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+  }
+  .deck::-webkit-scrollbar { display: none; }
+  .sol {
+    flex: 0 0 168px; scroll-snap-align: start;
+    background: #1c3338; border: 1.5px solid rgba(244,239,230,.16);
+    border-radius: 18px; padding: 12px; min-height: 148px;
+    text-align: left; color: var(--cream);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .sol .kind {
+    font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold);
+  }
+  .sol .title { font-size: 15px; font-weight: 800; line-height: 1.25; }
+  .sol .why { font-size: 12px; color: #c9c0b0; line-height: 1.35; flex: 1; }
+  .sol.picked { outline: 2px solid var(--gold); background: #2a4a3a; }
+  .sol.wrongpick { outline: 2px solid var(--rose); background: #3a2422; }
+  .sol.rightpick { outline: 2px solid #7dcea0; background: #1e3d32; }
+
+  .playbar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: auto; }
+  .playbar .cta { padding: 14px 10px; font-size: 15px; }
+  .playbar .cta[disabled] { opacity: .45; }
+
+  /* result */
+  .result {
+    margin-top: 10px; border-radius: 16px; padding: 12px 14px;
+    background: rgba(255,251,244,.08); font-size: 14px; line-height: 1.4;
+    display: none;
+  }
+  .result.on { display: block; }
+  .result a { color: #f0d37a; }
+  .scoreline { font-size: 12px; color: #9ad5d3; margin-top: 6px; }
+
+  .end h1 { font-size: 28px; }
+  .statgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0 20px; }
+  .stat {
+    background: rgba(255,251,244,.07); border-radius: 16px; padding: 14px;
+  }
+  .stat b { display: block; font-size: 26px; }
+  .stat span { font-size: 12px; color: #cbbfae; }
+
+  footer.tiny { font-size: 11px; color: #8b8478; margin-top: 16px; line-height: 1.4; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <section class="screen on" id="home">
+    <div class="brand">Cascade Paws Veterinary Clinic</div>
+    <h1>Case Deck</h1>
+    <p class="lede">Draw a patient. Read the problem. Play one solution card from your deck. Then go on. Mobile-first. Fiction only.</p>
+    <div class="modes">
+      <button class="mode on" data-mode="order"><b>Walk the board</b><span>Difficulty 1 → 100. Same order as the caseload sheet.</span></button>
+      <button class="mode" data-mode="random"><b>Shuffle the deck</b><span>Random cases. Good for a five-minute drill.</span></button>
+      <button class="mode" data-mode="hard"><b>Critical tray only</b><span>Difficulty 76–100. High stress, stacked problems.</span></button>
+    </div>
+    <button class="cta" id="startBtn">Deal the first case</button>
+    <p class="footer tiny">Tap a solution card, then Play it. You get one card per case. Learn the miss, then continue.</p>
+  </section>
+
+  <section class="screen" id="play">
+    <div class="hud">
+      <div class="pill" id="hudCase">Case 1 / 100</div>
+      <div class="pill" id="hudScore">Score 0</div>
+      <button class="link" id="quitBtn">Quit</button>
+    </div>
+    <div class="stage">
+      <div class="case-wrap">
+        <article class="case" id="caseCard"></article>
+      </div>
+    </div>
+    <p class="prompt" id="prompt"><b>Your move.</b> Pick one card from the deck that best solves this visit.</p>
+    <div class="deck-label">Solution deck — swipe</div>
+    <div class="deck" id="deck"></div>
+    <div class="result" id="result"></div>
+    <div class="playbar">
+      <button class="cta" id="playBtn" disabled>Play card</button>
+      <button class="cta ghost" id="nextBtn" style="display:none">Next case →</button>
+    </div>
+  </section>
+
+  <section class="screen" id="end">
+    <div class="brand">Rounds complete</div>
+    <h1 class="end-title" id="endTitle">Nice work.</h1>
+    <div class="statgrid">
+      <div class="stat"><b id="sScore">0</b><span>Score</span></div>
+      <div class="stat"><b id="sAcc">0%</b><span>Correct cards</span></div>
+      <div class="stat"><b id="sStreak">0</b><span>Best streak</span></div>
+      <div class="stat"><b id="sSeen">0</b><span>Cases seen</span></div>
+    </div>
+    <button class="cta" id="againBtn">Deal again</button>
+    <button class="cta ghost" id="homeBtn">Back to title</button>
+    <p class="footer tiny">This is a teaching toy for a fictional clinic. Real animals need a real veterinarian. Product pages are examples and may change.</p>
+  </section>
+
+</div>
+
+<script>
+const PRODUCTS = {
+  adv_dog: { name: "Advantage II (dog, weight-specific)", url: "https://www.amazon.com/dp/B004QRFJA4", kind: "Flea prevention" },
+  seresto_dog: { name: "Seresto collar, dogs >18 lb", url: "https://www.amazon.com/dp/B00B8CG602", kind: "Flea + tick collar" },
+  capstar: { name: "Capstar flea tablets", url: "https://www.amazon.com/dp/B07PWB9J43", kind: "Flea knockdown" },
+  greenies: { name: "Greenies dental chew (size by weight)", url: "https://www.amazon.com/dp/B000KAHPZ8", kind: "Dental adjunct" },
+  cet: { name: "C.E.T. enzymatic toothpaste", url: "https://www.amazon.com/dp/B00RZDXA7K", kind: "Home dental" },
+  oxyfresh: { name: "Oxyfresh water additive", url: "https://www.amazon.com/dp/B0002DHNV2", kind: "Breath adjunct" },
+  epiotic: { name: "Epi-Otic Advanced ear cleanser", url: "https://www.amazon.com/dp/B0056EAKUA", kind: "Ear hygiene" },
+  cosequin: { name: "Cosequin MSM joint tablets", url: "https://www.amazon.com/dp/B003ULL1NQ", kind: "Joint adjunct" },
+  fortiflora: { name: "FortiFlora canine probiotic", url: "https://www.amazon.com/dp/B001650NNW", kind: "GI support" },
+  glandex: { name: "Glandex anal gland chews", url: "https://www.amazon.com/dp/B08157ZGBF", kind: "Fiber / glands" },
+  heartgard: { name: "Heartgard Plus (usually Rx)", url: "https://www.amazon.com/dp/B0DYGK63LC", kind: "Heartworm preventive" },
+  thunder: { name: "ThunderShirt calming vest", url: "https://www.amazon.com/dp/B0029PYC3K", kind: "Anxiety vest" },
+  kong: { name: "KONG Classic (stuff + freeze)", url: "https://www.amazon.com/dp/B000AYN7LU", kind: "Enrichment" },
+  douxo: { name: "Douxo S3 Calm shampoo", url: "https://www.amazon.com/dp/B09478KGJZ", kind: "Itch shampoo" },
+  ha_food: { name: "Purina HA hydrolyzed diet", url: "https://www.amazon.com/dp/B072JQMKSR", kind: "Food trial" },
+  id_food: { name: "Hill's i/d digestive diet", url: "https://www.amazon.com/dp/B006JCT446", kind: "GI diet" },
+  puzzle: { name: "Puzzle feeder / slow bowl", url: "https://www.amazon.com/dp/B0018CIWUG", kind: "Weight / enrichment" },
+  donut: { name: "Inflatable recovery donut", url: "https://www.amazon.com/dp/B0DCYQBKN8", kind: "Stop licking" },
+  fountain: { name: "Pet water fountain", url: "https://www.amazon.com/dp/B07YQ16V5Q", kind: "Hydration" },
+  adaptil: { name: "Adaptil calming collar", url: "https://www.amazon.com/dp/B000HPVH78", kind: "Pheromone" },
+  zesty: { name: "Allergy support chews (adjunct)", url: "https://www.amazon.com/dp/B09TV6XSM4", kind: "Itch adjunct" },
+  clinic: { name: "Exam / test / Rx first", url: "", kind: "Clinic action" },
+  er: { name: "Send to emergency now", url: "", kind: "Triage" },
+  wait: { name: "Wait it out at home", url: "", kind: "Watchful waiting" }
+};
+
+const CASES = [
+  { d:1, name:"Biscuit", sig:"Beagle mix · 9 mo F · 22 lb", ail:"New-adopt wellness + first fleas", bg:"Foster-to-home last month. Bright, eating, one flea spec on the belly.", stress:3, trigger:"New house", answer:["adv_dog","kong"], why:"Start species-and-weight flea prevention and give the brain a job so shoes survive.", band:"routine" },
+  { d:2, name:"Maple", sig:"Golden · 2 yr FS · 58 lb", ail:"Recurrent yeast ears after river swims", bg:"Hikes the Little Spokane. Floppy ears stay wet.", stress:4, trigger:"Ear handling", answer:["epiotic","clinic"], why:"Cytology first. Cleaner is fine only after the eardrum is intact.", band:"routine" },
+  { d:3, name:"Scout", sig:"Lab mix · 4 yr MN · 72 lb", ail:"Restart heartworm prevention + extra weight", bg:"Missed two summer doses. No cough. Lost his waist.", stress:2, trigger:"Pills", answer:["heartgard","puzzle"], why:"Test before restarting. Measure food. Preventive is usually Rx.", band:"routine" },
+  { d:4, name:"Noodle", sig:"Dachshund · 6 yr FS · 14 lb", ail:"Back-pain watch / IVDD risk", bg:"Apartment stairs. Reluctant this week, still wagging.", stress:5, trigger:"Being scooped", answer:["cosequin","clinic"], why:"Pain exam and rest beat a weekend of jumping. Supplement is adjunct only.", band:"standard" },
+  { d:5, name:"Puck", sig:"Boston · 3 yr MN · 18 lb", ail:"Overheating risk on midday runs", bg:"Snorts on the Centennial Trail in July.", stress:6, trigger:"Heat", answer:["fountain","puzzle"], why:"Cooler hours, no hero jogs, keep him lean. Airway trouble is an ER.", band:"standard" },
+  { d:6, name:"Juniper", sig:"Aussie · 1 yr F · 42 lb", ail:"Fear / noise sensitivity", bg:"Hoarding-case rescue. Learns fast, startles at brooms.", stress:8, trigger:"Vet lobby", answer:["thunder","adaptil"], why:"Pressure vest + pheromone for car and lobby. Don't flood her.", band:"complex" },
+  { d:7, name:"Hobbes", sig:"Pomeranian · 7 yr MN · 8 lb", ail:"Periodontal disease, never dentaled", bg:"Lap dog. Grandkids mention the breath.", stress:7, trigger:"Toothbrush", answer:["cet","greenies"], why:"Home care now, anesthetic dental with rads on the books.", band:"standard" },
+  { d:8, name:"Diesel", sig:"Pit mix · 4 yr MN · 62 lb", ail:"Flea-allergy + hot spot on the rump", bg:"August in the Inland Northwest. Tail base raw.", stress:4, trigger:"Spray bottles", answer:["capstar","adv_dog"], why:"Kill adults today, start monthly prevention, treat the house. Infected skin may need Rx.", band:"standard" },
+  { d:9, name:"Bandit", sig:"Jack Russell · 2 yr MN · 16 lb", ail:"Garbage-gut after the BBQ", bg:"Stole leftovers. Soft stool, still bright.", stress:5, trigger:"Crate after raid", answer:["fortiflora","id_food"], why:"Bland / GI diet + probiotic if he's stable. Blood or lethargy = same day.", band:"standard" },
+  { d:10, name:"Luna", sig:"Husky · 4 yr FS · 52 lb", ail:"Separation howling + raw wrists", bg:"4 p.m. shift-change opera. Neighbors noticed.", stress:7, trigger:"Owner leaving", answer:["kong","thunder"], why:"Pre-departure enrichment and a vest. Door-destroying panic needs a behavior plan.", band:"complex" },
+  { d:11, name:"Finn", sig:"Irish setter · 7 yr MN · 65 lb", ail:"Deep-chest bloat history", bg:"Unproductive retching once last year. Eats like a vacuum.", stress:4, trigger:"Fast eating", answer:["puzzle","er"], why:"Slow the meals. Unproductive retching now is an emergency, not a chew.", band:"critical" },
+  { d:12, name:"Sable", sig:"Standard poodle · 6 yr FS · 44 lb", ail:"Atopic itch + brown paws", bg:"June sagebrush walks. Licks feet all night.", stress:5, trigger:"Baths", answer:["douxo","zesty"], why:"Medicated baths help. Chews are adjunct. Real atopy often needs Rx itch control.", band:"complex" },
+  { d:13, name:"Tater", sig:"English bulldog · 5 yr MN · 54 lb", ail:"Obesity + folds + airway", bg:"One-block exercise intolerance. Smelly folds.", stress:6, trigger:"Lifting", answer:["puzzle","douxo"], why:"Calories and fold care. Resting stertor belongs in a BOAS conversation.", band:"complex" },
+  { d:14, name:"Cosmo", sig:"Frenchie · 2 yr MN · 24 lb", ail:"Ate a hair tie Tuesday", bg:"Vomited twice, still nibbling. Tie not seen.", stress:8, trigger:"Hospital cage", answer:["er","clinic"], why:"Possible foreign body. Imaging first. Amazon cannot retrieve a hair tie.", band:"critical" },
+  { d:15, name:"Olive", sig:"Whippet · 3 yr FS · 24 lb", ail:"Stress colitis after boarding", bg:"Mucus stool 48 hours after pickup.", stress:7, trigger:"Kennel noise", answer:["fortiflora","adaptil"], why:"Support the gut and plan a calmer next board. Crash = come in.", band:"standard" },
+  { d:16, name:"Gumbo", sig:"Hound mix · 6 yr MN · 55 lb", ail:"Scooting every 8 weeks", bg:"Groomer expresses him like clockwork. Soft stool.", stress:4, trigger:"Rear-end handling", answer:["glandex","fortiflora"], why:"Fix stool quality and add fiber. An abscess is a clinic problem.", band:"standard" },
+  { d:17, name:"Ash", sig:"GSD · 9 yr MN · 78 lb", ail:"Hip OA + fireworks panic", bg:"Ex-patrol washout. Bunny-hops. July 4 is a write-off.", stress:6, trigger:"Booms", answer:["cosequin","thunder"], why:"Pain plan + vest before the first boom. NSAIDs need bloodwork.", band:"complex" },
+  { d:18, name:"Pudding", sig:"Pug · 8 yr MN · 22 lb", ail:"Squinting after the rose bush", bg:"Bulgy eyes, BCS 7/9. Squinting this morning.", stress:5, trigger:"Eye meds", answer:["er","donut"], why:"Possible corneal ulcer. Same-day eye exam. Cone/donut so he cannot rub.", band:"critical" },
+  { d:19, name:"Quill", sig:"Vizsla · 2 yr MN · 48 lb", ail:"Velcro anxiety on Zoom days", bg:"Whines under the desk the second the laptop closes.", stress:6, trigger:"Calls", answer:["kong","thunder"], why:"Independence drills and a stuffed toy during meetings.", band:"standard" },
+  { d:20, name:"Herb", sig:"Bearded collie · 10 yr MN · 48 lb", ail:"Sundowning + stiff joints", bg:"Gets stuck behind the couch at 11 p.m.", stress:5, trigger:"Dark halls", answer:["cosequin","puzzle"], why:"Daytime jobs, night lights, treat pain as pain — not 'just old.'", band:"complex" },
+  { d:21, name:"Soda", sig:"Rat terrier · 3 yr FS · 13 lb", ail:"Vomiting after steak fat", bg:"Raided the board. Tender belly possible.", stress:5, trigger:"Hospital smell", answer:["id_food","fortiflora"], why:"Low-fat GI food if stable. Pancreatitis can be an overnight ER.", band:"complex" },
+  { d:22, name:"Ivy", sig:"Sheltie · 7 yr FS · 22 lb", ail:"Storm fear + possible MDR1", bg:"Hides in the tub when the sky darkens.", stress:6, trigger:"Thunder", answer:["thunder","adaptil"], why:"Vest and pheromone before the front. Herding-breed drug caution is clinic-side.", band:"complex" },
+  { d:23, name:"Kettle", sig:"Airedale · 8 yr FS · 48 lb", ail:"Lick granuloma when suitcases appear", bg:"Raw wrist plaque. Travel week.", stress:7, trigger:"Suitcases", answer:["donut","kong"], why:"Stop the lick so skin can close. Then treat the leaving ritual.", band:"complex" },
+  { d:24, name:"River", sig:"Border collie · 5 yr MN · 45 lb", ail:"Pad burn after agility weekend", bg:"Skipping weaves the next day.", stress:3, trigger:"Nail grinders", answer:["cosequin","kong"], why:"Rest the pads. Joint support if he's a repeat weekend warrior.", band:"routine" },
+  { d:25, name:"Pearl", sig:"Maltese · 10 yr FS · 7 lb", ail:"Dental + climbing kidney values", bg:"PU/PD mild. Grade 3 tartar.", stress:6, trigger:"Nail restraint", answer:["cet","fountain"], why:"Labs before the dental. Water access always. No anesthesia-free scrape.", band:"complex" },
+  { d:26, name:"Boomer", sig:"Boxer · 6 yr MN · 66 lb", ail:"New skin lump + soft murmur", bg:"Wiggle-butt. 1 cm lump on a rib.", stress:3, trigger:"None much", answer:["clinic","greenies"], why:"Aspirate lumps. Stage the heart. Chews don't biopsy.", band:"complex" },
+  { d:27, name:"Twig", sig:"Italian greyhound · 4 yr FS · 11 lb", ail:"Winter shatter-risk + wrist lick", bg:"Broke a toe last year. Shivers on the porch.", stress:7, trigger:"Boots", answer:["thunder","donut"], why:"Warmth and stop the lick. Fractures need films, not a sock.", band:"complex" },
+  { d:28, name:"Indy", sig:"Ridgeback · 4 yr FS · 72 lb", ail:"Camping ticks + ridge pits", bg:"Lake Pend Oreille weekend.", stress:2, trigger:"None", answer:["seresto_dog","adv_dog"], why:"Year-round tick plan after trail days. Infected dermoid is surgical.", band:"routine" },
+  { d:29, name:"Clementine", sig:"Cocker · 5 yr FS · 28 lb", ail:"Chronic both-ear otitis", bg:"Won't let anyone near her ears.", stress:8, trigger:"Ear bottles", answer:["clinic","epiotic"], why:"Sedated look + cytology. Cleaner is step two, not step one on a war-dog.", band:"critical" },
+  { d:30, name:"Spruce", sig:"Doodle · 5 yr MN · 48 lb", ail:"Year-round itch — food-trial candidate", bg:"Steroids every spring. Never a real diet trial.", stress:8, trigger:"Itch at night", answer:["ha_food","douxo"], why:"Eight exclusive weeks. Nothing else in the bowl. Shampoo while you wait.", band:"critical" }
+];
+
+const DISTRACTORS = ["wait","greenies","zesty","oxyfresh","fountain","glandex","puzzle","kong","donut","adaptil"];
+
+const state = {
+  mode: "order",
+  queue: [],
+  i: 0,
+  score: 0,
+  seen: 0,
+  correct: 0,
+  streak: 0,
+  best: 0,
+  picked: null,
+  resolved: false
+};
+
+const $ = (id) => document.getElementById(id);
+
+document.querySelectorAll(".mode").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".mode").forEach(b => b.classList.remove("on"));
+    btn.classList.add("on");
+    state.mode = btn.dataset.mode;
+  });
+});
+
+$("startBtn").onclick = start;
+$("againBtn").onclick = start;
+$("homeBtn").onclick = () => show("home");
+$("quitBtn").onclick = finish;
+$("playBtn").onclick = playCard;
+$("nextBtn").onclick = nextCase;
+
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("on"));
+  $(id).classList.add("on");
+}
+
+function start() {
+  let pool = CASES.slice();
+  if (state.mode === "hard") pool = CASES.filter(c => c.d >= 18 || c.band === "critical");
+  if (state.mode === "random" || state.mode === "hard") {
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+  }
+  state.queue = pool;
+  state.i = 0;
+  state.score = 0;
+  state.seen = 0;
+  state.correct = 0;
+  state.streak = 0;
+  state.best = 0;
+  show("play");
+  deal();
+}
+
+function hue(name) {
+  let h = 0;
+  for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) % 360;
+  return h;
+}
+
+function bandChip(c) {
+  if (c.d <= 8) return ["d1", "Routine"];
+  if (c.d <= 16) return ["d2", "Standard"];
+  if (c.d <= 24) return ["d3", "Complex"];
+  return ["d4", "Critical"];
+}
+
+function deal() {
+  const c = state.queue[state.i];
+  state.picked = null;
+  state.resolved = false;
+  $("playBtn").disabled = true;
+  $("playBtn").style.display = "";
+  $("nextBtn").style.display = "none";
+  $("result").classList.remove("on");
+  $("hudCase").textContent = `Case ${state.i + 1} / ${state.queue.length}`;
+  $("hudScore").textContent = `Score ${state.score}`;
+  const [cls, label] = bandChip(c);
+  const h = hue(c.name);
+  $("caseCard").innerHTML = `
+    <div class="row">
+      <div style="display:flex;gap:10px;align-items:center">
+        <div class="avatar" style="background:hsl(${h} 42% 38%)">${c.name.slice(0,1)}</div>
+        <div>
+          <p class="nm">${c.name}</p>
+          <p class="sig">${c.sig}</p>
+        </div>
+      </div>
+      <span class="chip ${cls}">${label} · #${c.d}</span>
+    </div>
+    <div class="ail">${c.ail}</div>
+    <div class="bg">${c.bg}</div>
+    <div class="meta">
+      <i>Stress ${c.stress}/10</i>
+      <i>Trigger: ${c.trigger}</i>
+    </div>`;
+  $("caseCard").style.animation = "none";
+  void $("caseCard").offsetWidth;
+  $("caseCard").style.animation = "deal .45s ease";
+  renderDeck(c);
+  $("prompt").innerHTML = `<b>Your move.</b> Pick one card that best solves ${c.name}'s visit.`;
+}
+
+function renderDeck(c) {
+  const keys = new Set(c.answer);
+  while (keys.size < 4) {
+    const extra = DISTRACTORS[Math.floor(Math.random() * DISTRACTORS.length)];
+    if (![...c.answer].includes(extra)) keys.add(extra);
+  }
+  const hand = [...keys];
+  for (let i = hand.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [hand[i], hand[j]] = [hand[j], hand[i]];
+  }
+  const deck = $("deck");
+  deck.innerHTML = "";
+  hand.forEach(k => {
+    const p = PRODUCTS[k];
+    const btn = document.createElement("button");
+    btn.className = "sol";
+    btn.dataset.key = k;
+    btn.innerHTML = `<div class="kind">${p.kind}</div><div class="title">${p.name}</div><div class="why">${k === "wait" ? "Only if the dog is bright, eating, and this is truly mild." : k === "er" ? "Use when delay can cost an eye, a gut, or a life." : k === "clinic" ? "Exam, cytology, imaging, or a prescription — not a shopping bag." : "A real product page exists for this card."}</div>`;
+    btn.onclick = () => pick(btn, k);
+    deck.appendChild(btn);
+  });
+  deck.scrollLeft = 0;
+}
+
+function pick(btn, key) {
+  if (state.resolved) return;
+  document.querySelectorAll(".sol").forEach(s => s.classList.remove("picked"));
+  btn.classList.add("picked");
+  state.picked = key;
+  $("playBtn").disabled = false;
+}
+
+function playCard() {
+  if (!state.picked || state.resolved) return;
+  const c = state.queue[state.i];
+  const ok = c.answer.includes(state.picked);
+  state.resolved = true;
+  state.seen += 1;
+  document.querySelectorAll(".sol").forEach(s => {
+    if (c.answer.includes(s.dataset.key)) s.classList.add("rightpick");
+    if (s.dataset.key === state.picked && !ok) s.classList.add("wrongpick");
+  });
+  if (ok) {
+    const pts = 10 + c.stress + Math.min(c.d, 20);
+    state.score += pts;
+    state.correct += 1;
+    state.streak += 1;
+    state.best = Math.max(state.best, state.streak);
+    $("result").innerHTML = `<b>That's a working card.</b> ${c.why}<br>${productLinks(c)}<div class="scoreline">+${pts} · streak ${state.streak}</div>`;
+  } else {
+    state.streak = 0;
+    const played = PRODUCTS[state.picked].name;
+    $("result").innerHTML = `<b>Not the card for ${c.name}.</b> You played “${played}.” ${c.why}<br>${productLinks(c)}<div class="scoreline">+0 · streak reset</div>`;
+  }
+  $("result").classList.add("on");
+  $("hudScore").textContent = `Score ${state.score}`;
+  $("playBtn").style.display = "none";
+  $("nextBtn").style.display = "";
+}
+
+function productLinks(c) {
+  const bits = c.answer
+    .map(k => PRODUCTS[k])
+    .filter(p => p && p.url)
+    .map(p => `<a href="${p.url}" target="_blank" rel="noopener">${p.name}</a>`);
+  const clinicish = c.answer.filter(k => !PRODUCTS[k].url).map(k => PRODUCTS[k].name);
+  let html = "";
+  if (bits.length) html += `Product pages: ${bits.join(" · ")}`;
+  if (clinicish.length) html += `${bits.length ? "<br>" : ""}Clinic-side: ${clinicish.join(" · ")}`;
+  return html;
+}
+
+function nextCase() {
+  if (state.i >= state.queue.length - 1) return finish();
+  state.i += 1;
+  deal();
+}
+
+function finish() {
+  show("end");
+  const acc = state.seen ? Math.round((state.correct / state.seen) * 100) : 0;
+  $("sScore").textContent = state.score;
+  $("sAcc").textContent = acc + "%";
+  $("sStreak").textContent = state.best;
+  $("sSeen").textContent = state.seen;
+  $("endTitle").textContent = acc >= 75 ? "Rounds look clean." : acc >= 50 ? "Solid floor, keep drilling." : "The deck taught you something.";
+}
+</script>
+</body>
+</html>
