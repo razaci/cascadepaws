@@ -80,14 +80,25 @@
   .hud button.link {
     background: none; border: 0; color: #9ad5d3; font-size: 13px; padding: 6px;
   }
+  .mute {
+    border: 1px solid rgba(244,239,230,.22);
+    background: rgba(255,251,244,.08);
+    color: var(--cream);
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .mute.off { opacity: .55; }
 
   /* case card */
   .stage { perspective: 1200px; flex: 0 0 auto; }
   .case-wrap {
-    position: relative; height: 290px;
+    position: relative; height: auto; min-height: 290px;
   }
+  .case-wrap.anatomy-open { }
   .case {
-    position: absolute; inset: 0;
+    position: relative;
     border-radius: var(--radius);
     background: var(--paper); color: var(--ink);
     box-shadow: var(--shadow);
@@ -178,6 +189,48 @@
   .stat span { font-size: 12px; color: #cbbfae; }
 
   footer.tiny { font-size: 11px; color: #8b8478; margin-top: 16px; line-height: 1.4; }
+  .qopts { display: grid; gap: 8px; margin-top: 8px; }
+  .qopt {
+    text-align: left; border: 1.5px solid rgba(244,239,230,.18);
+    background: #1c3338; color: var(--cream);
+    border-radius: 16px; padding: 14px 14px;
+    font-size: 15px; font-weight: 700;
+  }
+  .qopt:active { transform: scale(.99); }
+  .qopt.good { outline: 2px solid #7dcea0; background: #1e3d32; }
+  .qopt.bad { outline: 2px solid var(--rose); background: #3a2422; }
+  .slots { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 4px 0 10px; }
+  .slot {
+    border: 1.5px dashed rgba(244,239,230,.28);
+    border-radius: 14px; padding: 10px; font-size: 12px; min-height: 46px;
+    color: #d7cbb8;
+  }
+  .slot.filled { border-style: solid; border-color: var(--gold); color: #fff; background: rgba(201,162,39,.12); }
+  #debrief .cta { margin-top: 12px; }
+  .stepdot { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #9ad5d3; }
+
+  .anat-btn {
+    margin-top: 10px; width: 100%; border: 1px dashed #c9a227;
+    background: #f3ead3; color: #3a2f1c; border-radius: 12px;
+    padding: 8px 10px; font-size: 12px; font-weight: 800;
+  }
+  .anatomy {
+    display: none; margin-top: 10px; background: #142833;
+    border-radius: 14px; padding: 8px 8px 6px; color: #f4efe6;
+  }
+  .anatomy.on { display: block; }
+  .anatomy svg { width: 100%; height: auto; display: block; }
+  .anatomy .lab {
+    font-size: 11px; line-height: 1.4; color: #d7cbb8; margin: 6px 4px 2px;
+  }
+  .anatomy .lab b { color: #f0d37a; }
+  .hot { fill: #c45c4a; stroke: #f4efe6; stroke-width: 1.2; animation: pulse 1.4s ease-in-out infinite; }
+  .dim { fill: #3a5560; stroke: #6d8a93; stroke-width: .8; }
+  @keyframes pulse {
+    0%,100% { opacity: .85; }
+    50% { opacity: 1; }
+  }
+  .sheet-note { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #9ad5d3; }
 </style>
 </head>
 <body>
@@ -186,20 +239,48 @@
   <section class="screen on" id="home">
     <div class="brand">Cascade Paws Veterinary Clinic</div>
     <h1>Case Deck</h1>
-    <p class="lede">Draw a patient. Read the problem. Play one solution card from your deck. Then go on. Mobile-first. Fiction only.</p>
+    <p class="lede">Read the case. Answer a quick question. Tap two solution cards — the second tap scores and moves you on. No extra Play button.</p>
     <div class="modes">
       <button class="mode on" data-mode="order"><b>Walk the board</b><span>Difficulty 1 → 100. Same order as the caseload sheet.</span></button>
       <button class="mode" data-mode="random"><b>Shuffle the deck</b><span>Random cases. Good for a five-minute drill.</span></button>
       <button class="mode" data-mode="hard"><b>Critical tray only</b><span>Difficulty 76–100. High stress, stacked problems.</span></button>
+      <button class="mode" data-mode="anatomy"><b>Advanced anatomy lab · 50</b><span>Optional deeper care. Body map + tissue-level problem + Amazon solution.</span></button>
     </div>
-    <button class="cta" id="startBtn">Deal the first case</button>
-    <p class="footer tiny">Tap a solution card, then Play it. You get one card per case. Learn the miss, then continue.</p>
+    <button class="cta" id="startBtn">Start briefing</button>
+    <button class="cta ghost" id="muteHome">Sound on · tap to mute</button>
+    <p class="footer tiny">Two cards per case. First tap selects, second tap locks both and scores. Sounds unlock after your first tap.</p>
+  </section>
+
+  <section class="screen" id="brief">
+    <div class="brand">How a visit runs</div>
+    <h1>Four screens. Two cards.</h1>
+    <div class="modes">
+      <div class="mode"><b>1 · Patient</b><span>Name, complaint, stress. Open anatomy if you want the tissue map.</span></div>
+      <div class="mode"><b>2 · Question</b><span>Triage or structure. Tap one answer to continue.</span></div>
+      <div class="mode"><b>3 · Two solutions</b><span>Tap card A, then card B. That is the play. No extra button.</span></div>
+      <div class="mode"><b>4 · Debrief</b><span>What hit, what missed, Amazon pages, then the next dog.</span></div>
+    </div>
+    <button class="cta" id="briefGo">Deal the first case</button>
+    <button class="cta ghost" id="briefHome">Back</button>
+  </section>
+
+  <section class="screen" id="quiz">
+    <div class="hud">
+      <div class="pill" id="quizHud">Question</div>
+      <div class="pill" id="quizScore">Score 0</div>
+      <button class="mute" id="muteQuiz" type="button">🔊</button>
+      <button class="link" id="quizQuit">Quit</button>
+    </div>
+    <article class="case" id="quizCard"></article>
+    <p class="prompt" id="quizPrompt"><b>Question.</b></p>
+    <div id="quizOpts" class="qopts"></div>
   </section>
 
   <section class="screen" id="play">
     <div class="hud">
       <div class="pill" id="hudCase">Case 1 / 100</div>
       <div class="pill" id="hudScore">Score 0</div>
+      <button class="mute" id="mutePlay" type="button">🔊</button>
       <button class="link" id="quitBtn">Quit</button>
     </div>
     <div class="stage">
@@ -207,14 +288,26 @@
         <article class="case" id="caseCard"></article>
       </div>
     </div>
-    <p class="prompt" id="prompt"><b>Your move.</b> Pick one card from the deck that best solves this visit.</p>
-    <div class="deck-label">Solution deck — swipe</div>
-    <div class="deck" id="deck"></div>
-    <div class="result" id="result"></div>
-    <div class="playbar">
-      <button class="cta" id="playBtn" disabled>Play card</button>
-      <button class="cta ghost" id="nextBtn" style="display:none">Next case →</button>
+    <p class="prompt" id="prompt"><b>Pick two.</b> Tap a card to select it. Tap a second card to lock both.</p>
+    <div class="slots" id="slots">
+      <div class="slot" id="slot0">1 · empty</div>
+      <div class="slot" id="slot1">2 · empty</div>
     </div>
+    <div class="deck-label">Solution deck — tap two</div>
+    <div class="deck" id="deck"></div>
+    <p class="footer tiny" id="pickHint">Need two cards. Tap a selected card again to drop it.</p>
+  </section>
+
+  <section class="screen" id="debrief">
+    <div class="hud">
+      <div class="pill" id="debHud">Debrief</div>
+      <div class="pill" id="debScore">Score 0</div>
+      <button class="mute" id="muteDeb" type="button">🔊</button>
+      <button class="link" id="debQuit">Quit</button>
+    </div>
+    <article class="case" id="debCard"></article>
+    <div class="result on" id="result"></div>
+    <button class="cta" id="nextBtn">Next case →</button>
   </section>
 
   <section class="screen" id="end">
@@ -234,6 +327,80 @@
 </div>
 
 <script>
+/* Soft clinic-deck SFX via Web Audio — no extra files, works offline. */
+const SFX = {
+  ctx: null,
+  muted: false,
+  unlock() {
+    if (!this.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      this.ctx = new AC();
+    }
+    if (this.ctx.state === "suspended") this.ctx.resume();
+  },
+  vol(n) { return this.muted ? 0 : n; },
+  env(g, t, a = 0.01, d = 0.18, peak = 0.12) {
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(Math.max(this.vol(peak), 0.0001), t + a);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + a + d);
+  },
+  tone(freq, type, dur, peak, slide) {
+    if (this.muted || !this.ctx) return;
+    const t = this.ctx.currentTime;
+    const o = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
+    this.env(g, t, 0.012, dur, peak);
+    o.connect(g); g.connect(this.ctx.destination);
+    o.start(t); o.stop(t + dur + 0.05);
+  },
+  noise(dur, peak, hp) {
+    if (this.muted || !this.ctx) return;
+    const t = this.ctx.currentTime;
+    const n = this.ctx.createBufferSource();
+    const len = Math.ceil(this.ctx.sampleRate * dur);
+    const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+    n.buffer = buf;
+    const f = this.ctx.createBiquadFilter();
+    f.type = "highpass"; f.frequency.value = hp || 800;
+    const g = this.ctx.createGain();
+    this.env(g, t, 0.004, dur, peak);
+    n.connect(f); f.connect(g); g.connect(this.ctx.destination);
+    n.start(t); n.stop(t + dur + 0.02);
+  },
+  tap() { this.tone(620, "triangle", 0.07, 0.05); this.noise(0.04, 0.03, 1800); },
+  deal() {
+    this.noise(0.09, 0.05, 900);
+    this.tone(220, "sine", 0.16, 0.06, 330);
+    setTimeout(() => this.tone(392, "triangle", 0.12, 0.04), 90);
+  },
+  pick() { this.tone(520, "sine", 0.08, 0.05); this.tone(780, "triangle", 0.1, 0.03); },
+  ok() {
+    this.tone(523, "sine", 0.12, 0.07);
+    setTimeout(() => this.tone(659, "sine", 0.12, 0.07), 90);
+    setTimeout(() => this.tone(784, "triangle", 0.2, 0.08), 180);
+  },
+  bad() {
+    this.tone(220, "sawtooth", 0.18, 0.05, 140);
+    this.noise(0.12, 0.04, 400);
+  },
+  next() { this.tone(440, "triangle", 0.08, 0.04, 660); },
+  win() {
+    [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => this.tone(f, "sine", 0.18, 0.07), i * 110));
+  }
+};
+
+function toggleMute() {
+  SFX.muted = !SFX.muted;
+  if (!SFX.muted) { SFX.unlock(); SFX.tap(); }
+  syncMuteButtons();
+}
+
 const PRODUCTS = {
   adv_dog: { name: "Advantage II (dog, weight-specific)", url: "https://www.amazon.com/dp/B004QRFJA4", kind: "Flea prevention" },
   seresto_dog: { name: "Seresto collar, dogs >18 lb", url: "https://www.amazon.com/dp/B00B8CG602", kind: "Flea + tick collar" },
@@ -296,6 +463,61 @@ const CASES = [
 
 const DISTRACTORS = ["wait","greenies","zesty","oxyfresh","fountain","glandex","puzzle","kong","donut","adaptil"];
 
+const ANATOMY_CASES = [
+  { d:1, name:"Alder", sig:"Beagle · 3 yr MN · 26 lb", ail:"Otitis externa — vertical + horizontal canal", sys:"ear", part:"External ear canal (pinna → vertical canal → horizontal canal → tympanum)", note:"Yeast and bacteria sit in the L-shaped canal. The eardrum is the stop sign. Cleaner never goes past a ruptured drum.", bg:"Head-shaking after lake day. Brown discharge.", stress:4, trigger:"Ear drops", answer:["epiotic","clinic"], why:"Map the canal, confirm the drum, then clean. Cytology tells yeast vs bacteria." },
+  { d:2, name:"Bramble", sig:"Cocker · 6 yr FS · 29 lb", ail:"Pinna hematoma risk from violent shaking", sys:"ear", part:"Pinna cartilage + vessels between skin layers", note:"Shake tears a vessel inside the ear flap. Blood fills the space and can cauliflower the cartilage.", bg:"Chronic ears. Flap feels puffy and warm.", stress:6, trigger:"Handling the flap", answer:["epiotic","clinic"], why:"Treat the canal disease causing the shake. A formed hematoma is clinic/surgery, not a cleaner alone." },
+  { d:3, name:"Cove", sig:"Golden · 2 yr FS · 58 lb", ail:"Atopic dermatitis — epidermis + dermis itch cycle", sys:"skin", part:"Epidermis, dermis, mast cells, nerve endings", note:"Allergens hit skin immune cells. Histamine and cytokines drive itch. Scratch breaks barrier, yeast moves in.", bg:"June paw-licking. Pink belly.", stress:5, trigger:"Baths", answer:["douxo","zesty"], why:"Repair the barrier with a vet shampoo. Chews are adjunct. Many need Rx itch control." },
+  { d:4, name:"Drift", sig:"Pit mix · 4 yr MN · 62 lb", ail:"Flea-allergy — caudal dorsum skin", sys:"skin", part:"Dorsal lumbosacral skin + flea saliva antigen", note:"One flea bite can light up the whole rump in an allergic dog. Hot spots are surface infection on broken skin.", bg:"Raw tail base in August.", stress:4, trigger:"Sprays", answer:["capstar","adv_dog"], why:"Kill adults now, then monthly prevention. House and all pets. Infected skin may need Rx." },
+  { d:5, name:"Ellis", sig:"Doodle · 5 yr MN · 48 lb", ail:"Food-responsive inflammation — gut + skin axis", sys:"gi", part:"Small-intestine mucosa + cutaneous immune response", note:"Dietary protein can trigger both enterocytes and skin. A hydrolyzed diet shrinks the antigen the gut sees.", bg:"Year-round itch, never a real trial.", stress:7, trigger:"Night itch", answer:["ha_food","douxo"], why:"Eight exclusive weeks. Nothing else in the bowl. Shampoo while the gut quiets." },
+  { d:6, name:"Flint", sig:"Lab · 8 yr MN · 80 lb", ail:"Coxofemoral osteoarthritis", sys:"hip", part:"Acetabulum + femoral head cartilage, joint capsule", note:"Cartilage thins, bone remodels, capsule thickens. Morning stiffness is joint, not 'laziness.'", bg:"Bunny-hops rising from the truck.", stress:4, trigger:"Hip flex", answer:["cosequin","puzzle"], why:"Weight off the joint, adjunct glucosamine/CS, ramps. NSAIDs are Rx + bloodwork." },
+  { d:7, name:"Gable", sig:"Dachshund · 6 yr FS · 14 lb", ail:"IVDD watch — T-L intervertebral disc", sys:"spine", part:"Nucleus pulposus + annulus at T11–L3", note:"Chondrodystrophic discs calcify. A bulge or explosion can hit the spinal cord. Pain first, then weak hind limbs.", bg:"Refusing stairs, still wagging.", stress:5, trigger:"Picked up under arms", answer:["cosequin","clinic"], why:"Neuro exam and rest. A chew does not decompress a disc." },
+  { d:8, name:"Haven", sig:"Yorkie · 9 yr FS · 6 lb", ail:"Periodontal disease — sulcus to bone", sys:"mouth", part:"Gingiva, periodontal ligament, alveolar bone", note:"Plaque biofilm inflames the sulcus. Ligament and bone recede. Tiny dogs hide huge roots under tiny crowns.", bg:"Breath the grandkids mention.", stress:7, trigger:"Toothbrush", answer:["cet","greenies"], why:"Enzymatic paste now. True cleaning is under the gumline, under anesthesia, with films." },
+  { d:9, name:"Ivo", sig:"Maltese · 10 yr FS · 7 lb", ail:"Tooth root + early kidney load", sys:"kidney", part:"Periodontal vessels ↔ systemic circulation ↔ kidneys", note:"Mouth inflammation dumps bacteria and cytokines into blood. Kidneys already showing mild PU/PD.", bg:"Tartar grade 3. Drinks more.", stress:6, trigger:"Restraint", answer:["cet","fountain"], why:"Labs before dental. Hydration support. Do not scrape awake." },
+  { d:10, name:"Joss", sig:"Frenchie · 2 yr MN · 24 lb", ail:"GI foreign body — pylorus / jejunum risk", sys:"gi", part:"Stomach → pylorus → small intestine lumen", note:"A hair tie can lodge at the pylorus or accordion the jejunum. Vomiting with something still 'in there' is anatomy, not attitude.", bg:"Vomited twice. Tie not seen.", stress:8, trigger:"Cage", answer:["er","clinic"], why:"Imaging. Obstruction is endoscopy or surgery. No Amazon retrieval." },
+  { d:11, name:"Kite", sig:"Irish setter · 7 yr MN · 65 lb", ail:"GDV risk — gas-dilated stomach + twist", sys:"stomach", part:"Stomach, gastroesophageal junction, portal vein, spleen", note:"Deep chest + one huge meal + gulp air. Stomach swells, can rotate, kills blood flow. Unproductive retch is the alarm.", bg:"Field-trial eater. One ER retch last year.", stress:4, trigger:"Fast eating", answer:["puzzle","er"], why:"Slow feeders cut gulp risk. Active bloat is always emergency." },
+  { d:12, name:"Lumen", sig:"Boxer · 6 yr MN · 66 lb", ail:"Mitral valve watch + dermal mass", sys:"heart", part:"Mitral valve leaflets + left atrium; dermal mast cells", note:"Leaky mitral valve volume-loads the atrium. A skin lump in a boxer is a cell type until aspirated.", bg:"Soft murmur. New 1 cm rib lump.", stress:3, trigger:"None", answer:["clinic","greenies"], why:"Listen and aspirate. Chews don't echo a heart or read a slide." },
+  { d:13, name:"Moss", sig:"Shepherd · 4 yr MN · 72 lb", ail:"Heartworm — pulmonary arteries", sys:"heart", part:"Right heart + pulmonary arterial tree", note:"Larvae become worms in the pulmonary arteries. Missed doses leave a window. Antigen test before restart.", bg:"Two missed summer doses. No cough yet.", stress:2, trigger:"Pills", answer:["heartgard","puzzle"], why:"Test first. Preventive is usually Rx. Keep him lean so the heart works less." },
+  { d:14, name:"Noll", sig:"Pug · 8 yr MN · 22 lb", ail:"Corneal ulcer — epithelium of the globe", sys:"eye", part:"Corneal epithelium + stroma; brachycephalic globe exposure", note:"Shallow sockets + rose thorn = scratched cornea. Squinting is pain. Rubbing deepens the ulcer.", bg:"Squinting after the rose bush.", stress:5, trigger:"Eye meds", answer:["er","donut"], why:"Same-day fluorescein. Donut so the paw cannot finish the job." },
+  { d:15, name:"Orla", sig:"Boston · 3 yr MN · 18 lb", ail:"Brachycephalic airway — nares, palate, trachea", sys:"airway", part:"Stenotic nares, elongated soft palate, hypoplastic trachea", note:"Hot air + exercise = swelling in an already tight tube. Cyanosis is late. Heatstroke is anatomy plus weather.", bg:"Noisy after a noon jog.", stress:6, trigger:"Heat", answer:["fountain","puzzle"], why:"Dawn walks, lean mass, no neck pressure. Resting stertor is a surgery talk." },
+  { d:16, name:"Pike", sig:"Chi · 11 yr FS · 6.4 lb", ail:"Tracheal collapse — cervical rings", sys:"airway", part:"Tracheal cartilage rings + dorsal membrane", note:"Rings flatten. A collar adds extra crush. Honk cough is air squeezing through a floppy tube.", bg:"Honks when excited. Lives in sweaters.", stress:7, trigger:"Collar pull", answer:["fountain","cet"], why:"Harness only. Humidity helps. Cough meds are Rx." },
+  { d:17, name:"Quill", sig:"Vizsla · 2 yr MN · 48 lb", ail:"Separation — limbic + GI motility", sys:"brain", part:"Amygdala / HPA axis + colon motility", note:"Panic is a brain-gut loop. Cortisol speeds the colon. Wrist licking is displacement on skin.", bg:"Whines when the laptop closes.", stress:6, trigger:"Calls", answer:["kong","thunder"], why:"Give the brain a job and deep-pressure input. Meds if doors come off." },
+  { d:18, name:"Rook", sig:"Husky · 4 yr FS · 52 lb", ail:"Lick granuloma — dermis of the carpus", sys:"skin", part:"Dermis + peripheral nerve itch loop at the wrist", note:"Repeat lick thickens skin into a plaque. Infection hides under it. The cause may be joint, itch, or leave-taking.", bg:"Raw wrists + 4 p.m. howl.", stress:7, trigger:"Leaving", answer:["kong","thunder"], why:"Break the lick and the leaving ritual. Deep infection needs culture." },
+  { d:19, name:"Sable", sig:"Airedale · 8 yr FS · 48 lb", ail:"Acral lick — need a barrier on the limb", sys:"skin", part:"Carpal dermis; self-trauma loop", note:"Until the tongue cannot reach, the plaque cannot close.", bg:"Suitcase week. Wrist raw 4 cm.", stress:7, trigger:"Suitcases", answer:["donut","kong"], why:"Physical barrier first. Then occupancy for the brain." },
+  { d:20, name:"Tess", sig:"Hound mix · 6 yr MN · 55 lb", ail:"Anal sac impaction", sys:"anal", part:"Paired anal sacs at 4 and 8 o'clock of the anus", note:"Sacs sit inside the sphincter. Soft stool doesn't express them on a poop. They overfill, scoot, or abscess.", bg:"Beige rug scoot every 8 weeks.", stress:4, trigger:"Rear handling", answer:["glandex","fortiflora"], why:"Fiber firms the stool so the sacs empty. Abscess = clinic." },
+  { d:21, name:"Ulric", sig:"Rat terrier · 3 yr FS · 13 lb", ail:"Pancreatitis risk — right-limb pancreas", sys:"gi", part:"Pancreas (right limb near duodenum)", note:"Fatty trash makes the pancreas digest itself. Pain sits under the last ribs on the right.", bg:"Steak-fat raid. Tender belly.", stress:5, trigger:"Hospital smell", answer:["id_food","fortiflora"], why:"Low-fat GI food if stable. Shocky pancreatitis stays overnight." },
+  { d:22, name:"Vela", sig:"Whippet · 3 yr FS · 24 lb", ail:"Stress colitis — large-bowel mucosa", sys:"gi", part:"Colon mucosa + goblet cells (mucus stool)", note:"Boarding noise hits the HPA axis. Colon dumps mucus and small frequent stools, sometimes with specks of blood.", bg:"Mucus 48 hrs after pickup.", stress:7, trigger:"Kennel", answer:["fortiflora","adaptil"], why:"Support flora and plan a quieter next board. Crash = come in." },
+  { d:23, name:"Wren", sig:"Jack Russell · 2 yr MN · 16 lb", ail:"Dietary indiscretion — small-bowel flush", sys:"gi", part:"Jejunum / ileum enterocytes", note:"Garbage overwhelms absorptive cells. Soft bulky stool is small bowel. Bright + drinking can stay home short-term.", bg:"BBQ leftovers.", stress:5, trigger:"Crate", answer:["fortiflora","id_food"], why:"Bland period and probiotic. Bloody or dull = same day." },
+  { d:24, name:"Yarrow", sig:"BC · 5 yr MN · 45 lb", ail:"Pad epidermis abrasion", sys:"paw", part:"Digital pad epithelium + nail bed", note:"Dirt + weave poles file the keratin off the pads. Pain refers up the limb and looks like a 'shoulder.'", bg:"Raw pads after trial weekend.", stress:3, trigger:"Grinders", answer:["cosequin","kong"], why:"Rest the keratin. Joint support if he repeats the weekend." },
+  { d:25, name:"Zeke", sig:"Ridgeback · 4 yr FS · 72 lb", ail:"Tick on skin + dermoid sinus watch", sys:"skin", part:"Dorsal midline skin + subcutaneous tract (dermoid)", note:"A sinus is a tube from skin toward the spine. Ticks add a second problem on the same landscape.", bg:"Ridge pits after Pend Oreille.", stress:2, trigger:"None", answer:["seresto_dog","adv_dog"], why:"Year-round tick product. An infected sinus is surgery." },
+  { d:26, name:"Ancho", sig:"Berner · 5 yr MN · 95 lb", ail:"Hip dysplasia remodeling", sys:"hip", part:"Femoral head coverage + joint effusion", note:"Poor coverage as a pup becomes OA as an adult. Heat intolerance stacks on mass.", bg:"Slower on the hill walk.", stress:3, trigger:"Car rides", answer:["cosequin","puzzle"], why:"Mass off the joint. Map lumps separately. Growing masses get aspirated." },
+  { d:27, name:"Briar", sig:"Akita · 4 yr FS · 78 lb", ail:"Cranial cruciate strain — stifle", sys:"stifle", part:"Cranial cruciate ligament inside the knee", note:"The CCL stops the tibia sliding forward. Partial tear = toe-touch. Complete tear often needs surgery.", bg:"Toe-touch after fetch. Stoic.", stress:5, trigger:"Lobby dogs", answer:["cosequin","donut"], why:"Rest and stage the knee. Supplements do not sew a ligament." },
+  { d:28, name:"Cedar", sig:"IG · 4 yr FS · 11 lb", ail:"Thin-skin trauma + carpal lick", sys:"paw", part:"Thin dermis over distal limbs; low body fat", note:"Sighthounds have little padding. Cold + thin skin + lick = open dermis fast.", bg:"Shivers, wrist lick starting.", stress:7, trigger:"Boots", answer:["thunder","donut"], why:"Warmth and a barrier. Fractures need films." },
+  { d:29, name:"Dusk", sig:"Sheltie · 7 yr FS · 22 lb", ail:"Noise fear — auditory pathway + MDR1 caution", sys:"brain", part:"Cochlea → brainstem → amygdala; MDR1 / ABCB1 gene in CNS barrier", note:"Storm sound is a threat signal. Some herding brains also handle certain drugs poorly.", bg:"Hides in the tub.", stress:6, trigger:"Thunder", answer:["thunder","adaptil"], why:"Pressure and pheromone before the front. Drug choices stay with the DVM." },
+  { d:30, name:"Elroy", sig:"Bearded collie · 10 yr MN · 48 lb", ail:"Cognitive + OA — brain and hip together", sys:"brain", part:"Forebrain / sleep-wake nuclei + coxofemoral joints", note:"Night restlessness is brain aging plus pain that keeps him from settling.", bg:"Stuck behind the couch at 11 p.m.", stress:5, trigger:"Dark halls", answer:["cosequin","puzzle"], why:"Treat pain as pain. Give a daytime job. Night lights." },
+  { d:31, name:"Fennel", sig:"Newf · 3 yr MN · 118 lb", ail:"Moist pyoderma in a skin fold", sys:"skin", part:"Intertrigo: two skin surfaces + trapped moisture + microbes", note:"Fold skin stays warm and wet. Surface bacteria bloom. Elbow pain makes him lie in the fold longer.", bg:"Weeping spot behind the ear.", stress:3, trigger:"Clippers", answer:["douxo","cosequin"], why:"Open, clean, dry the fold. Weight and joints so he changes position." },
+  { d:32, name:"Grit", sig:"Bulldog · 5 yr MN · 54 lb", ail:"Facial fold + airway stack", sys:"airway", part:"Facial fold epidermis + nares / palate", note:"Folds and airways fail together in this head shape. Heat and fat make both worse.", bg:"Smelly folds, one-block limit.", stress:6, trigger:"Slings", answer:["puzzle","douxo"], why:"Calories and fold hygiene. Resting noise is anatomy, not perfume." },
+  { d:33, name:"Hazel", sig:"Shih tzu · 8 yr FS · 13 lb", ail:"Facial fold + ear canal yeast", sys:"ear", part:"Facial fold + external ear canal skin", note:"Same Malassezia that loves folds loves canals. Moisture is the common ingredient.", bg:"Red fold, brown pinna.", stress:5, trigger:"Face wash", answer:["epiotic","douxo"], why:"Dry the fold, clean the canal after the drum is checked." },
+  { d:34, name:"Iggy", sig:"Pomeranian · 7 yr MN · 8 lb", ail:"Crowded incisors — periodontal niche", sys:"mouth", part:"Incisor arcade + gingival sulcus", note:"Too many teeth in a tiny jaw. Food packs the sulcus and bone disappears quietly.", bg:"Never had a dental.", stress:7, trigger:"Mouth", answer:["cet","greenies"], why:"Finger-brush seconds. Book films. Size the chew so it is not a fracture risk." },
+  { d:35, name:"Jelly", sig:"Cavalier · 6 yr FS · 16 lb", ail:"Myxomatous mitral valve", sys:"heart", part:"Mitral valve + chordae tendineae", note:"Leaflets thicken and billow. A murmur is turbulence. Cough later can be heart or airway — don't guess.", bg:"Grade III murmur, no cough yet.", stress:4, trigger:"Restraint", answer:["cet","greenies"], why:"Keep her lean and her mouth quieter before a long anesthesia. Heart meds are staged Rx." },
+  { d:36, name:"Kite2", sig:"Toller · 5 yr MN · 44 lb", ail:"Water in the horizontal canal", sys:"ear", part:"Horizontal canal + tympanic membrane", note:"Retrieves soak the L-bend. Trapped water + wax = yeast party.", bg:"Shake after every duck.", stress:3, trigger:"Towel", answer:["epiotic","cosequin"], why:"Dry protocol after the drum is safe. Hips are a second conversation." },
+  { d:37, name:"Lark", sig:"Pointer · 6 yr FS · 52 lb", ail:"Foxtail tract in paw or nose", sys:"paw", part:"Interdigital skin or nasal cavity — migrating awn", note:"A grass awn is a one-way barb. It can travel from paw or nose into deeper tissue.", bg:"Sneeze + one paw lick after Palouse grass.", stress:4, trigger:"Nose", answer:["adv_dog","epiotic"], why:"Hunt the awn. Prevention is still on. Migration can be surgical." },
+  { d:38, name:"Mango", sig:"Staffy mix · 4 yr MN · 42 lb", ail:"Hot spot — epidermis slough", sys:"skin", part:"Superficial pyoderma of haired skin", note:"Moisture + scratch + bacteria. The surface dies in a circle overnight.", bg:"Wet patch after a swim-scratch.", stress:4, trigger:"Water", answer:["douxo","capstar"], why:"Clip, clean, stop fleas, stop the lick." },
+  { d:39, name:"Nash", sig:"Heeler · 7 yr MN · 38 lb", ail:"Elbow OA — humeroradial joint", sys:"stifle", part:"Elbow articular cartilage (hunters load the front)", note:"Front-end load on a working dog. Stiffness after the blind is cartilage, not mood.", bg:"Slow to load the truck.", stress:4, trigger:"Elbow flex", answer:["cosequin","epiotic"], why:"Pain plan and dry ears after retrieves. NSAIDs need labs." },
+  { d:40, name:"Opal", sig:"Mini poodle · 8 yr FS · 12 lb", ail:"Patella + dental crowding", sys:"stifle", part:"Patellar ligament / trochlear groove", note:"A skipping kneecap is a tracking problem. Tiny breeds stack teeth on the same visit.", bg:"Skips when excited.", stress:5, trigger:"Hats", answer:["greenies","thunder"], why:"Keep her lean. Surgery if skips become pain. Fear plan separate." },
+  { d:41, name:"Prune", sig:"Basset · 6 yr MN · 58 lb", ail:"Pendulous pinna + long-back load", sys:"ear", part:"Heavy pinna covering canal + T-L spine load", note:"Ear leather lids the canal. Long back + extra weight loads discs.", bg:"Yeast ears, 10 lb to lose.", stress:4, trigger:"Ear clean", answer:["epiotic","puzzle"], why:"Open the canal and take mass off the spine." },
+  { d:42, name:"Quest", sig:"Great Dane · 3 yr MN · 130 lb", ail:"Deep-chest GDV geometry", sys:"stomach", part:"Deep thoracic cavity + stomach mobility", note:"The chest shape gives the stomach room to swing. One meal and a run is the classic setup.", bg:"Gulps dinner, then yard sprints.", stress:3, trigger:"Bowl", answer:["puzzle","er"], why:"Split meals, elevate debate is mixed — slowing is not. Know the ER." },
+  { d:43, name:"Rye", sig:"Shiba · 5 yr FS · 22 lb", ail:"Anal sac + low-fiber stool", sys:"anal", part:"Anal sac duct opening at the anocutaneous line", note:"Ducts are tiny. Loose stool skips the squeeze that empties them.", bg:"Fishy scoot after chicken-and-rice week.", stress:3, trigger:"Rear", answer:["glandex","fortiflora"], why:"Normalize stool first." },
+  { d:44, name:"Spruce", sig:"Corgi · 9 yr MN · 28 lb", ail:"IVDD-shaped back + weight", sys:"spine", part:"Chondrodystrophic disc + short legs / long back", note:"Same disc math as a dachshund, different silhouette. Extra pounds are disc load.", bg:"Reluctant to jump into the SUV.", stress:5, trigger:"Jumping", answer:["cosequin","puzzle"], why:"Ramp, calorie cut, pain exam." },
+  { d:45, name:"Tulip", sig:"Standard schnauzer · 3 yr FS · 35 lb", ail:"Nasal planum foxtail suspect", sys:"airway", part:"Nasal turbinates", note:"A sneeze after tall grass can be an awn in the nose, not 'allergies.'", bg:"Sneeze fits post-hike.", stress:4, trigger:"Nose hold", answer:["clinic","adv_dog"], why:"Scope if it persists. Don't wait on a traveler." },
+  { d:46, name:"Umber", sig:"Malamute · 6 yr MN · 85 lb", ail:"Thick coat — skin microclimate", sys:"skin", part:"Hair follicle + undercoat humidity", note:"A blown coat traps moisture on the dermis. Hot spots hide under the ruff.", bg:"Damp patch after a summer walk.", stress:3, trigger:"Brushing", answer:["douxo","adv_dog"], why:"Find skin, not just fur. Flea control anyway." },
+  { d:47, name:"Vesper", sig:"Catahoula · 2 yr F intact · 46 lb", ail:"Uterus in heat — pyometra education", sys:"kidney", part:"Uterine endometrium (and why we mention kidneys: sepsis hits them)", note:"After heat, the uterus can fill with pus. Closed pyometra is a ticking abdomen.", bg:"Flagging, picky appetite.", stress:6, trigger:"Other dogs", answer:["heartgard","adv_dog"], why:"Keep her in. Spay timing is the real solution. Pyometra is emergency surgery." },
+  { d:48, name:"Wicket", sig:"Senior mix · 12 yr FS · 40 lb", ail:"PU/PD — kidney concentrating ability", sys:"kidney", part:"Renal tubules + collecting ducts", note:"Kidneys lose the trick of saving water. Fountain helps intake; labs name the cause.", bg:"Fills the bowl twice.", stress:3, trigger:"Clinic", answer:["fountain","clinic"], why:"UA + chemistry before any 'just old' story." },
+  { d:49, name:"Yeti", sig:"St. Bernard · 4 yr MN · 140 lb", ail:"Gastric volume + joint load", sys:"stomach", part:"Large-breed stomach + coxofemoral joints", note:"A huge stomach and huge hips fail on the same weekend if meals and mass are sloppy.", bg:"One bowl a day. Slow to rise.", stress:3, trigger:"Food bowl", answer:["puzzle","cosequin"], why:"Split meals, measure calories, joint adjunct." },
+  { d:50, name:"Zelda", sig:"Doodle · 7 yr FS · 50 lb", ail:"Full-body atopy map — ears, paws, axilla", sys:"skin", part:"Pinna, interdigital skin, axillary dermis", note:"Atopy is not one spot. The map lights ears, feet, and armpits together.", bg:"Brown paws, yeasty ears, night itch.", stress:8, trigger:"Night", answer:["douxo","ha_food"], why:"Barrier care plus a real diet trial. Expect Rx for the itch itself." }
+];
+// unique display names
+ANATOMY_CASES.forEach((c, i) => { if (c.name === "Kite2") c.name = "Keel"; });
+
 const state = {
   mode: "order",
   queue: [],
@@ -305,36 +527,92 @@ const state = {
   correct: 0,
   streak: 0,
   best: 0,
-  picked: null,
-  resolved: false
+  qCorrect: 0,
+  qSeen: 0,
+  picked: [],
+  resolved: false,
+  quizKind: "triage"
 };
 
 const $ = (id) => document.getElementById(id);
 
-document.querySelectorAll(".mode").forEach(btn => {
+document.querySelectorAll("#home .mode").forEach(btn => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".mode").forEach(b => b.classList.remove("on"));
+    document.querySelectorAll("#home .mode").forEach(b => b.classList.remove("on"));
     btn.classList.add("on");
     state.mode = btn.dataset.mode;
+    SFX.tap();
   });
 });
 
-$("startBtn").onclick = start;
-$("againBtn").onclick = start;
-$("homeBtn").onclick = () => show("home");
+$("startBtn").onclick = () => { SFX.unlock(); SFX.tap(); show("brief"); };
+$("briefGo").onclick = () => { SFX.unlock(); start(); };
+$("briefHome").onclick = () => { SFX.tap(); show("home"); };
+$("againBtn").onclick = () => { SFX.unlock(); start(); };
+$("homeBtn").onclick = () => { SFX.tap(); show("home"); };
 $("quitBtn").onclick = finish;
-$("playBtn").onclick = playCard;
-$("nextBtn").onclick = nextCase;
+$("quizQuit").onclick = finish;
+$("debQuit").onclick = finish;
+$("nextBtn").onclick = () => { SFX.next(); nextCase(); };
+$("muteHome").onclick = toggleMute;
+$("mutePlay").onclick = toggleMute;
+$("muteQuiz").onclick = toggleMute;
+$("muteDeb").onclick = toggleMute;
+document.body.addEventListener("pointerdown", () => SFX.unlock(), { once: true });
+
+function syncMuteButtons() {
+  const labelsOn = "Sound on · tap to mute";
+  const labelsOff = "Sound off · tap to unmute";
+  if ($("muteHome")) $("muteHome").textContent = SFX.muted ? labelsOff : labelsOn;
+  ["mutePlay","muteQuiz","muteDeb"].forEach(id => {
+    const el = $(id);
+    if (!el) return;
+    el.textContent = SFX.muted ? "🔇" : "🔊";
+    el.classList.toggle("off", SFX.muted);
+  });
+}
 
 function show(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("on"));
   $(id).classList.add("on");
 }
 
+function dogMap(sys) {
+  const on = (id) => id === sys ? "hot" : "dim";
+  return `<svg viewBox="0 0 320 150" aria-label="Dog anatomy map">
+    <rect width="320" height="150" fill="#0e1c22" rx="10"/>
+    <!-- body -->
+    <ellipse class="${on("skin")}" cx="168" cy="78" rx="78" ry="32"/>
+    <!-- head -->
+    <ellipse class="${on("brain")}" cx="58" cy="62" rx="26" ry="20"/>
+    <ellipse class="${on("mouth")}" cx="36" cy="70" rx="16" ry="10"/>
+    <circle class="${on("eye")}" cx="52" cy="56" r="5"/>
+    <ellipse class="${on("ear")}" cx="68" cy="42" rx="10" ry="16"/>
+    <!-- neck / airway -->
+    <ellipse class="${on("airway")}" cx="92" cy="70" rx="16" ry="10"/>
+    <!-- chest -->
+    <ellipse class="${on("heart")}" cx="128" cy="80" rx="16" ry="14"/>
+    <ellipse class="${on("stomach")}" cx="168" cy="86" rx="22" ry="14"/>
+    <ellipse class="${on("gi")}" cx="198" cy="90" rx="24" ry="12"/>
+    <ellipse class="${on("kidney")}" cx="186" cy="70" rx="10" ry="8"/>
+    <!-- spine -->
+    <rect class="${on("spine")}" x="88" y="48" width="150" height="7" rx="3"/>
+    <!-- hip / stifle / paws -->
+    <circle class="${on("hip")}" cx="228" cy="88" r="12"/>
+    <ellipse class="${on("stifle")}" cx="236" cy="112" rx="9" ry="12"/>
+    <ellipse class="${on("anal")}" cx="248" cy="78" rx="8" ry="8"/>
+    <ellipse class="${on("paw")}" cx="118" cy="122" rx="12" ry="7"/>
+    <ellipse class="${on("paw")}" cx="238" cy="128" rx="12" ry="7"/>
+    <!-- legs lines -->
+    <path d="M130 104 L118 122 M150 106 L148 124 M220 98 L236 120 M200 100 L198 124" stroke="#6d8a93" fill="none" stroke-width="3" stroke-linecap="round"/>
+    <text x="12" y="142" fill="#9ad5d3" font-size="9">Tap a glowing site — that is the problem tissue</text>
+  </svg>`;
+}
+
 function start() {
-  let pool = CASES.slice();
+  let pool = state.mode === "anatomy" ? ANATOMY_CASES.slice() : CASES.slice();
   if (state.mode === "hard") pool = CASES.filter(c => c.d >= 18 || c.band === "critical");
-  if (state.mode === "random" || state.mode === "hard") {
+  if (state.mode === "random" || state.mode === "hard" || state.mode === "anatomy") {
     for (let i = pool.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [pool[i], pool[j]] = [pool[j], pool[i]];
@@ -347,6 +625,8 @@ function start() {
   state.correct = 0;
   state.streak = 0;
   state.best = 0;
+  state.qCorrect = 0;
+  state.qSeen = 0;
   show("play");
   deal();
 }
@@ -358,25 +638,17 @@ function hue(name) {
 }
 
 function bandChip(c) {
+  if (c.sys) return ["d3", "Anatomy"];
   if (c.d <= 8) return ["d1", "Routine"];
   if (c.d <= 16) return ["d2", "Standard"];
   if (c.d <= 24) return ["d3", "Complex"];
   return ["d4", "Critical"];
 }
 
-function deal() {
-  const c = state.queue[state.i];
-  state.picked = null;
-  state.resolved = false;
-  $("playBtn").disabled = true;
-  $("playBtn").style.display = "";
-  $("nextBtn").style.display = "none";
-  $("result").classList.remove("on");
-  $("hudCase").textContent = `Case ${state.i + 1} / ${state.queue.length}`;
-  $("hudScore").textContent = `Score ${state.score}`;
+function patientHTML(c) {
   const [cls, label] = bandChip(c);
   const h = hue(c.name);
-  $("caseCard").innerHTML = `
+  return `
     <div class="row">
       <div style="display:flex;gap:10px;align-items:center">
         <div class="avatar" style="background:hsl(${h} 42% 38%)">${c.name.slice(0,1)}</div>
@@ -392,12 +664,207 @@ function deal() {
     <div class="meta">
       <i>Stress ${c.stress}/10</i>
       <i>Trigger: ${c.trigger}</i>
+      ${c.sys ? `<i>System: ${c.sys}</i>` : ""}
     </div>`;
+}
+
+function wireAnatomy(root) {
+  const tog = root.querySelector("#anatToggle");
+  const panel = root.querySelector("#anatPanel");
+  if (!tog || !panel) return;
+  tog.onclick = (e) => {
+    e.stopPropagation();
+    const open = panel.classList.toggle("on");
+    tog.textContent = open ? "Hide anatomy map" : "Open advanced anatomy (optional)";
+    SFX.tap();
+  };
+}
+
+function deal() {
+  const c = state.queue[state.i];
+  state.picked = [];
+  state.resolved = false;
+  show("play");
+  $("hudCase").textContent = `Case ${state.i + 1} / ${state.queue.length}`;
+  $("hudScore").textContent = `Score ${state.score}`;
+  $("slots").style.display = "none";
+  $("deck").style.display = "none";
+  document.querySelector("#play .deck-label").style.display = "none";
+  $("pickHint").style.display = "none";
+  $("caseCard").innerHTML = patientHTML(c) + `
+    <button type="button" class="anat-btn" id="anatToggle">${c.sys ? "Hide anatomy map" : "Open advanced anatomy (optional)"}</button>
+    <div class="anatomy ${c.sys ? "on" : ""}" id="anatPanel">
+      ${dogMap(c.sys || guessSys(c))}
+      <p class="lab"><span class="sheet-note">Tissue</span><br><b>${c.part || fallbackPart(c)}</b><br>${c.note || "This visit still maps onto a real structure. Clinic first if you are guessing."}</p>
+    </div>
+    <button type="button" class="cta" id="toQuiz" style="margin-top:12px">Tap to answer the question →</button>`;
   $("caseCard").style.animation = "none";
   void $("caseCard").offsetWidth;
   $("caseCard").style.animation = "deal .45s ease";
+  wireAnatomy($("caseCard"));
+  $("toQuiz").onclick = () => { SFX.next(); openQuiz(); };
+  $("prompt").innerHTML = `<span class="stepdot">Screen 1 of 4</span><br><b>Read ${c.name}.</b> Then tap through to the question.`;
+  SFX.deal();
+}
+
+function triageFor(c) {
+  if (c.answer.includes("er")) return "er";
+  if (c.answer.includes("clinic") || c.answer.includes("heartgard") || c.answer.includes("ha_food")) return "clinic";
+  return "home";
+}
+
+function openQuiz() {
+  const c = state.queue[state.i];
+  const sys = c.sys || guessSys(c);
+  const tissueQ = Math.random() < 0.5 || !!c.sys;
+  state.quizKind = tissueQ ? "tissue" : "triage";
+  show("quiz");
+  $("quizHud").textContent = `Q · case ${state.i + 1}`;
+  $("quizScore").textContent = `Score ${state.score}`;
+  $("quizCard").innerHTML = patientHTML(c);
+  const box = $("quizOpts");
+  box.innerHTML = "";
+  delete box.dataset.locked;
+  if (tissueQ) {
+    $("quizPrompt").innerHTML = `<span class="stepdot">Screen 2 of 4</span><br><b>Which structure is the problem?</b>`;
+    const right = fallbackPart(c);
+    const pool = [
+      "External ear canal and pinna",
+      "Gingiva and periodontal ligament",
+      "Stomach and gastric outflow",
+      "Intestinal lumen and mucosa",
+      "Coxofemoral joint cartilage",
+      "Intervertebral disc and cord",
+      "Cornea",
+      "Heart and pulmonary vessels",
+      "Epidermis and dermis",
+      "Anal sacs at 4 and 8 o'clock",
+      "Limbic threat circuit",
+      "Nares, palate, trachea",
+      "Stifle ligaments / cartilage",
+      "Digital pads",
+      "Renal tubules"
+    ].filter(x => x !== right);
+    const opts = [right];
+    while (opts.length < 4) {
+      const x = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+      if (x) opts.push(x);
+    }
+    opts.sort(() => Math.random() - 0.5);
+    opts.forEach(text => {
+      const b = document.createElement("button");
+      b.className = "qopt";
+      b.textContent = text;
+      b.onclick = () => gradeQuiz(b, text === right);
+      box.appendChild(b);
+    });
+  } else {
+    $("quizPrompt").innerHTML = `<span class="stepdot">Screen 2 of 4</span><br><b>Where does this visit belong?</b>`;
+    const right = triageFor(c);
+    const labels = {
+      home: "Home plan with the right product",
+      clinic: "Clinic today — exam / test / Rx",
+      er: "Emergency now — do not wait"
+    };
+    ["home","clinic","er"].forEach(k => {
+      const b = document.createElement("button");
+      b.className = "qopt";
+      b.textContent = labels[k];
+      b.onclick = () => gradeQuiz(b, k === right);
+      box.appendChild(b);
+    });
+  }
+}
+
+function gradeQuiz(btn, ok) {
+  if (btn.parentNode.dataset.locked) return;
+  btn.parentNode.dataset.locked = "1";
+  state.qSeen += 1;
+  if (ok) {
+    btn.classList.add("good");
+    state.qCorrect += 1;
+    state.score += 8;
+    SFX.ok();
+  } else {
+    btn.classList.add("bad");
+    SFX.bad();
+    [...btn.parentNode.children].forEach(el => {
+      if (el !== btn) el.style.opacity = ".65";
+    });
+  }
+  $("quizScore").textContent = `Score ${state.score}`;
+  setTimeout(openPick, 620);
+}
+
+function openPick() {
+  const c = state.queue[state.i];
+  state.picked = [];
+  state.resolved = false;
+  show("play");
+  $("hudCase").textContent = `Pick 2 · ${c.name}`;
+  $("hudScore").textContent = `Score ${state.score}`;
+  $("slots").style.display = "grid";
+  $("deck").style.display = "flex";
+  document.querySelector("#play .deck-label").style.display = "";
+  $("pickHint").style.display = "";
+  paintSlots();
+  $("caseCard").innerHTML = patientHTML(c);
+  $("prompt").innerHTML = `<span class="stepdot">Screen 3 of 4</span><br><b>Tap two solution cards</b> for ${c.name}. Second tap locks the pair.`;
   renderDeck(c);
-  $("prompt").innerHTML = `<b>Your move.</b> Pick one card that best solves ${c.name}'s visit.`;
+}
+
+function paintSlots() {
+  [0,1].forEach(i => {
+    const el = $("slot" + i);
+    const key = state.picked[i];
+    if (!key) {
+      el.className = "slot";
+      el.textContent = (i + 1) + " · empty";
+    } else {
+      el.className = "slot filled";
+      el.textContent = (i + 1) + " · " + PRODUCTS[key].name;
+    }
+  });
+}
+
+function guessSys(c) {
+  const t = (c.ail + " " + (c.why || "")).toLowerCase();
+  if (t.includes("ear")) return "ear";
+  if (t.includes("tooth") || t.includes("dental")) return "mouth";
+  if (t.includes("bloat") || t.includes("gdv")) return "stomach";
+  if (t.includes("hair tie") || t.includes("foreign") || t.includes("gastro") || t.includes("stool") || t.includes("colitis") || t.includes("pancrea")) return "gi";
+  if (t.includes("hip") || t.includes("oa") || t.includes("arth")) return "hip";
+  if (t.includes("back") || t.includes("ivdd")) return "spine";
+  if (t.includes("eye") || t.includes("cornea") || t.includes("squint")) return "eye";
+  if (t.includes("heart") || t.includes("murmur") || t.includes("worm")) return "heart";
+  if (t.includes("flea") || t.includes("itch") || t.includes("hot spot") || t.includes("skin") || t.includes("atop")) return "skin";
+  if (t.includes("anal") || t.includes("scoot")) return "anal";
+  if (t.includes("anxiety") || t.includes("fear") || t.includes("howl") || t.includes("thunder") || t.includes("storm")) return "brain";
+  if (t.includes("heat") || t.includes("airway") || t.includes("trach") || t.includes("snort")) return "airway";
+  if (t.includes("cruciate") || t.includes("patella") || t.includes("knee") || t.includes("limp")) return "stifle";
+  if (t.includes("pad") || t.includes("nail") || t.includes("paw")) return "paw";
+  if (t.includes("kidney") || t.includes("pu/pd") || t.includes("uter")) return "kidney";
+  return "skin";
+}
+function fallbackPart(c) {
+  const map = {
+    ear: "External ear canal and pinna",
+    mouth: "Gingiva and periodontal ligament",
+    stomach: "Stomach and gastric outflow",
+    gi: "Intestinal lumen and mucosa",
+    hip: "Coxofemoral joint cartilage",
+    spine: "Intervertebral disc and cord",
+    eye: "Cornea",
+    heart: "Heart and pulmonary vessels",
+    skin: "Epidermis and dermis",
+    anal: "Anal sacs at 4 and 8 o'clock",
+    brain: "Limbic threat circuit",
+    airway: "Nares, palate, trachea",
+    stifle: "Stifle ligaments / cartilage",
+    paw: "Digital pads",
+    kidney: "Renal tubules"
+  };
+  return map[guessSys(c)] || "Regional anatomy";
 }
 
 function renderDeck(c) {
@@ -419,7 +886,7 @@ function renderDeck(c) {
     btn.className = "sol";
     btn.dataset.key = k;
     btn.innerHTML = `<div class="kind">${p.kind}</div><div class="title">${p.name}</div><div class="why">${k === "wait" ? "Only if the dog is bright, eating, and this is truly mild." : k === "er" ? "Use when delay can cost an eye, a gut, or a life." : k === "clinic" ? "Exam, cytology, imaging, or a prescription — not a shopping bag." : "A real product page exists for this card."}</div>`;
-    btn.onclick = () => pick(btn, k);
+    btn.onclick = () => { SFX.pick(); pick(btn, k); };
     deck.appendChild(btn);
   });
   deck.scrollLeft = 0;
@@ -427,38 +894,58 @@ function renderDeck(c) {
 
 function pick(btn, key) {
   if (state.resolved) return;
-  document.querySelectorAll(".sol").forEach(s => s.classList.remove("picked"));
+  const idx = state.picked.indexOf(key);
+  if (idx >= 0) {
+    state.picked.splice(idx, 1);
+    btn.classList.remove("picked");
+    paintSlots();
+    SFX.tap();
+    return;
+  }
+  if (state.picked.length >= 2) return;
+  state.picked.push(key);
   btn.classList.add("picked");
-  state.picked = key;
-  $("playBtn").disabled = false;
+  paintSlots();
+  SFX.pick();
+  if (state.picked.length === 2) resolvePair();
 }
 
-function playCard() {
-  if (!state.picked || state.resolved) return;
+function resolvePair() {
+  if (state.resolved) return;
   const c = state.queue[state.i];
-  const ok = c.answer.includes(state.picked);
   state.resolved = true;
   state.seen += 1;
+  const need = new Set(c.answer);
+  const got = state.picked.filter(k => need.has(k));
+  const hits = got.length;
   document.querySelectorAll(".sol").forEach(s => {
-    if (c.answer.includes(s.dataset.key)) s.classList.add("rightpick");
-    if (s.dataset.key === state.picked && !ok) s.classList.add("wrongpick");
+    if (need.has(s.dataset.key)) s.classList.add("rightpick");
+    if (state.picked.includes(s.dataset.key) && !need.has(s.dataset.key)) s.classList.add("wrongpick");
   });
-  if (ok) {
-    const pts = 10 + c.stress + Math.min(c.d, 20);
-    state.score += pts;
+  let pts = 0;
+  if (hits === 2) {
+    pts = 16 + c.stress + Math.min(c.d, 16);
     state.correct += 1;
     state.streak += 1;
-    state.best = Math.max(state.best, state.streak);
-    $("result").innerHTML = `<b>That's a working card.</b> ${c.why}<br>${productLinks(c)}<div class="scoreline">+${pts} · streak ${state.streak}</div>`;
+    SFX.ok();
+  } else if (hits === 1) {
+    pts = 7;
+    state.streak = 0;
+    SFX.tap();
   } else {
     state.streak = 0;
-    const played = PRODUCTS[state.picked].name;
-    $("result").innerHTML = `<b>Not the card for ${c.name}.</b> You played “${played}.” ${c.why}<br>${productLinks(c)}<div class="scoreline">+0 · streak reset</div>`;
+    SFX.bad();
   }
-  $("result").classList.add("on");
-  $("hudScore").textContent = `Score ${state.score}`;
-  $("playBtn").style.display = "none";
-  $("nextBtn").style.display = "";
+  state.best = Math.max(state.best, state.streak);
+  state.score += pts;
+  const played = state.picked.map(k => PRODUCTS[k].name).join(" + ");
+  const ideal = c.answer.map(k => PRODUCTS[k].name).join(" + ");
+  const headline = hits === 2 ? "Both cards land." : hits === 1 ? "One of two." : "Different pair.";
+  $("debHud").textContent = `Debrief · ${c.name}`;
+  $("debScore").textContent = `Score ${state.score}`;
+  $("debCard").innerHTML = patientHTML(c);
+  $("result").innerHTML = `<span class="stepdot">Screen 4 of 4</span><br><b>${headline}</b> You played ${played}.<br>Target pair: ${ideal}.<br>${c.why}${c.note ? "<br><i>" + c.part + "</i>" : ""}<br>${productLinks(c)}<div class="scoreline">+${pts} · pair ${hits}/2 · streak ${state.streak} · questions ${state.qCorrect}/${state.qSeen}</div>`;
+  setTimeout(() => show("debrief"), 280);
 }
 
 function productLinks(c) {
@@ -483,10 +970,11 @@ function finish() {
   show("end");
   const acc = state.seen ? Math.round((state.correct / state.seen) * 100) : 0;
   $("sScore").textContent = state.score;
-  $("sAcc").textContent = acc + "%";
+  $("sAcc").textContent = acc + "% pairs";
   $("sStreak").textContent = state.best;
-  $("sSeen").textContent = state.seen;
+  $("sSeen").textContent = `${state.seen} · Q ${state.qCorrect}/${state.qSeen}`;
   $("endTitle").textContent = acc >= 75 ? "Rounds look clean." : acc >= 50 ? "Solid floor, keep drilling." : "The deck taught you something.";
+  SFX.win();
 }
 </script>
 </body>
