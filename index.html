@@ -99,14 +99,23 @@
   .case-wrap.anatomy-open { }
   .case {
     position: relative;
-    border-radius: var(--radius);
-    background: var(--paper); color: var(--ink);
-    box-shadow: var(--shadow);
+    border-radius: 18px;
+    background:
+      linear-gradient(180deg, #fffdf8 0%, var(--paper) 42%, #f3ead8 100%);
+    color: var(--ink);
+    box-shadow: var(--shadow), inset 0 0 0 1px #e4d4b4, inset 0 0 0 6px #f7f1e4;
     padding: 16px 16px 14px;
     display: flex; flex-direction: column;
     transform-origin: center;
     animation: deal .45s ease;
   }
+  .case:before, .case:after {
+    content: "CP";
+    position: absolute;
+    font-size: 9px; letter-spacing: .12em; font-weight: 800; color: #c9a227;
+  }
+  .case:before { top: 8px; left: 10px; }
+  .case:after { bottom: 8px; right: 10px; transform: rotate(180deg); }
   @keyframes deal {
     from { transform: translateY(24px) rotate(-3deg); opacity: 0; }
     to { transform: none; opacity: 1; }
@@ -151,12 +160,24 @@
   }
   .deck::-webkit-scrollbar { display: none; }
   .sol {
-    flex: 0 0 168px; scroll-snap-align: start;
-    background: #1c3338; border: 1.5px solid rgba(244,239,230,.16);
-    border-radius: 18px; padding: 12px; min-height: 148px;
+    flex: 0 0 156px; scroll-snap-align: start;
+    aspect-ratio: 2.5 / 3.5;
+    background:
+      radial-gradient(120px 80px at 20% 0%, rgba(201,162,39,.18), transparent 60%),
+      linear-gradient(165deg, #243f45, #15282c);
+    border: 1px solid #c9a227;
+    box-shadow: inset 0 0 0 4px #1a3035, 0 10px 20px rgba(0,0,0,.28);
+    border-radius: 14px; padding: 14px 12px 12px;
+    min-height: 196px;
     text-align: left; color: var(--cream);
     display: flex; flex-direction: column; gap: 6px;
+    position: relative;
   }
+  .sol .pip {
+    position: absolute; font-size: 10px; font-weight: 800; color: #c9a227;
+  }
+  .sol .pip.tl { top: 6px; left: 8px; }
+  .sol .pip.br { bottom: 6px; right: 8px; transform: rotate(180deg); }
   .sol .kind {
     font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold);
   }
@@ -207,7 +228,51 @@
   }
   .slot.filled { border-style: solid; border-color: var(--gold); color: #fff; background: rgba(201,162,39,.12); }
   #debrief .cta { margin-top: 12px; }
+  .break { margin-top: 10px; display: grid; gap: 6px; }
+  .break row, .br {
+    display: flex; justify-content: space-between; gap: 8px;
+    font-size: 12px; background: rgba(255,251,244,.06);
+    border-radius: 10px; padding: 8px 10px;
+  }
+  .br b { font-variant-numeric: tabular-nums; }
+  .algo {
+    background: rgba(255,251,244,.07); border-radius: 16px; padding: 12px 14px; margin: 0 0 10px;
+    font-size: 13px; line-height: 1.4; color: #d7cbb8;
+  }
+  .algo b { color: #fff; display: block; margin-bottom: 4px; font-size: 15px; }
   .stepdot { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #9ad5d3; }
+
+  .flylayer {
+    position: fixed; inset: 0; pointer-events: none; z-index: 40;
+    display: grid; place-items: center;
+  }
+  .bonusfly {
+    width: min(78vw, 280px);
+    border-radius: 20px;
+    padding: 18px 16px 16px;
+    color: #fff;
+    box-shadow: 0 24px 50px rgba(0,0,0,.4);
+    transform: translateY(120%) rotate(8deg) scale(.86);
+    opacity: 0;
+    animation: flyin .55s cubic-bezier(.2,1.2,.3,1) forwards;
+  }
+  .bonusfly.out { animation: flyout .4s ease-in forwards; }
+  .bonusfly.ok { background: linear-gradient(160deg, #2F7D5A, #0D7377); }
+  .bonusfly.no { background: linear-gradient(160deg, #8B3A32, #4A1F22); }
+  .bonusfly .tag {
+    font-size: 10px; letter-spacing: .16em; text-transform: uppercase; opacity: .85;
+  }
+  .bonusfly h3 { margin: 6px 0 6px; font-size: 22px; letter-spacing: -.03em; }
+  .bonusfly p { margin: 0; font-size: 13px; line-height: 1.35; opacity: .95; }
+  @keyframes flyin {
+    to { transform: translateY(0) rotate(-2deg) scale(1); opacity: 1; }
+  }
+  @keyframes flyout {
+    to { transform: translateY(-30%) rotate(-10deg) scale(.9); opacity: 0; }
+  }
+  .active-bonus {
+    margin: 8px 0 0; font-size: 12px; color: #f0d37a;
+  }
 
   .anat-btn {
     margin-top: 10px; width: 100%; border: 1px dashed #c9a227;
@@ -247,8 +312,10 @@
       <button class="mode" data-mode="anatomy"><b>Advanced anatomy lab · 50</b><span>Optional deeper care. Body map + tissue-level problem + Amazon solution.</span></button>
     </div>
     <button class="cta" id="startBtn">Start briefing</button>
+    <button class="cta ghost" id="labBtn">Scoring lab</button>
+    <button class="cta ghost" id="specBtn">Card design specs</button>
     <button class="cta ghost" id="muteHome">Sound on · tap to mute</button>
-    <p class="footer tiny">Two cards per case. First tap selects, second tap locks both and scores. Sounds unlock after your first tap.</p>
+    <p class="footer tiny">Two cards per case. Sounds unlock after the first tap. Mute remembers. Deal, tap, lock, hit, miss, and page-turn each have their own cue.</p>
   </section>
 
   <section class="screen" id="brief">
@@ -256,9 +323,9 @@
     <h1>Four screens. Two cards.</h1>
     <div class="modes">
       <div class="mode"><b>1 · Patient</b><span>Name, complaint, stress. Open anatomy if you want the tissue map.</span></div>
-      <div class="mode"><b>2 · Question</b><span>Triage or structure. Tap one answer to continue.</span></div>
+      <div class="mode"><b>2 · Three questions</b><span>Structure or triage, then first move, then tool family. Tap to advance.</span></div>
       <div class="mode"><b>3 · Two solutions</b><span>Tap card A, then card B. That is the play. No extra button.</span></div>
-      <div class="mode"><b>4 · Debrief</b><span>What hit, what missed, Amazon pages, then the next dog.</span></div>
+      <div class="mode"><b>4 · Debrief chain</b><span>4.1 verdict · 4.2 score math · 4.3 totals · 4.4 advantage card.</span></div>
     </div>
     <button class="cta" id="briefGo">Deal the first case</button>
     <button class="cta ghost" id="briefHome">Back</button>
@@ -289,6 +356,7 @@
       </div>
     </div>
     <p class="prompt" id="prompt"><b>Pick two.</b> Tap a card to select it. Tap a second card to lock both.</p>
+    <div id="liveQuiz"></div>
     <div class="slots" id="slots">
       <div class="slot" id="slot0">1 · empty</div>
       <div class="slot" id="slot1">2 · empty</div>
@@ -307,7 +375,42 @@
     </div>
     <article class="case" id="debCard"></article>
     <div class="result on" id="result"></div>
-    <button class="cta" id="nextBtn">Next case →</button>
+    <div id="advPick" class="qopts" style="display:none;margin-top:10px"></div>
+    <button class="cta" id="nextBtn">Score math →</button>
+  </section>
+
+  <section class="screen" id="advance">
+    <div class="brand">Set complete</div>
+    <h1>Easy rounds are done.</h1>
+    <p class="lede" id="advLede">Tap a card to choose the next set.</p>
+    <div class="qopts" id="advanceOpts"></div>
+  </section>
+
+  <section class="screen" id="lab">
+    <div class="brand">Scoring lab</div>
+    <h1>How points are built</h1>
+    <p class="lede">Four models run on every two-card play. You see the mix on the debrief, not a single mystery number.</p>
+    <div class="algo"><b>Jaccard set match</b>How much your pair overlaps the key pair. |you ∩ key| ÷ |you ∪ key|. Two of two = 1.00. One of two = 0.33. Zero = 0.</div>
+    <div class="algo"><b>Dice / F1</b>2 × hits ÷ (2 + 2). Softer than Jaccard on a near-miss, so one correct card still pays.</div>
+    <div class="algo"><b>1PL difficulty</b>Harder case (difficulty + stress) pays more when you are right, less when you are wrong. Same idea as a Rasch / one-parameter item curve.</div>
+    <div class="algo"><b>Safety utility</b>Missing an ER card on an emergency is expensive. Calling ER on a wellness dog is a small ding. Over-triage beats under-triage.</div>
+    <div class="algo"><b>Elo-lite rating</b>You have a hidden rating. Each case has one too. An upset (easy miss or hard hit) moves the rating more.</div>
+    <div class="algo"><b>Streak + system mastery</b>Streak multiplies the set score with a log cap. Each anatomy system keeps an exponential moving average so the end screen can say what you actually know.</div>
+    <button class="cta" id="labPlay">Use this on a case</button>
+    <button class="cta ghost" id="labHome">Back to title</button>
+  </section>
+
+  <section class="screen" id="specs">
+    <div class="brand">Visual system</div>
+    <h1>Card design specs</h1>
+    <p class="lede">Cascade Paws cards share one table language: cream stock, gold pips, teal night for solutions.</p>
+    <div class="algo"><b>Patient card · portrait stock</b>Ratio ~3:4. Cream gradient #FFFDF8 → #F3EAD8. Double inset: 1px gold hairline + 6px ivory mat. Corner mark CP, 9px, #C9A227. Type: name 22/800, signalment 12/#5B6570, complaint 16/800. Band chip: routine #2F7D5A, standard #0D7377, complex #B5811A, critical #B34032. Avatar 54px rounded 16, hue from name.</div>
+    <div class="algo"><b>Solution card · poker face</b>Ratio 2.5:3.5. Night field #243F45 → #15282C. 1px gold edge, 4px inner teal frame. Pips top-left and inverted bottom-right. Suit line (kind) 10px tracked gold. Title 15/800 cream. Body 12/#C9C0B0. Selected: gold ring. Hit: #7DCEA0 ring. Miss: #C45C4A ring.</div>
+    <div class="algo"><b>Bonus fly-in</b>Max 280px. Correct: #2F7D5A → #0D7377. Miss: #8B3A32 → #4A1F22. Enters from +120% Y with 8° tilt, settles −2°. Holds ~1s, exits −30% Y.</div>
+    <div class="algo"><b>Advantage / advance cards</b>Full-width night buttons, 16px radius, left-aligned. Title bold cream, rule line in #CBBFAE. Same tap target as quiz options (44px+).</div>
+    <div class="algo"><b>Table</b>Navy #142833 field. Safe-area padding. Max column 480px. Type stack: Trebuchet / Avenir Next / Segoe. Motion under 500ms except bonus fly.</div>
+    <button class="cta" id="specPlay">Deal a case</button>
+    <button class="cta ghost" id="specHome">Back to title</button>
   </section>
 
   <section class="screen" id="end">
@@ -315,16 +418,19 @@
     <h1 class="end-title" id="endTitle">Nice work.</h1>
     <div class="statgrid">
       <div class="stat"><b id="sScore">0</b><span>Score</span></div>
-      <div class="stat"><b id="sAcc">0%</b><span>Correct cards</span></div>
+      <div class="stat"><b id="sAcc">0%</b><span>Clean pairs</span></div>
       <div class="stat"><b id="sStreak">0</b><span>Best streak</span></div>
       <div class="stat"><b id="sSeen">0</b><span>Cases seen</span></div>
     </div>
+    <div class="algo" id="endScreens"></div>
+    <p class="lede" id="endNote"></p>
     <button class="cta" id="againBtn">Deal again</button>
     <button class="cta ghost" id="homeBtn">Back to title</button>
     <p class="footer tiny">This is a teaching toy for a fictional clinic. Real animals need a real veterinarian. Product pages are examples and may change.</p>
   </section>
 
 </div>
+<div class="flylayer" id="flylayer" aria-live="polite"></div>
 
 <script>
 /* Soft clinic-deck SFX via Web Audio — no extra files, works offline. */
@@ -390,14 +496,35 @@ const SFX = {
     this.noise(0.12, 0.04, 400);
   },
   next() { this.tone(440, "triangle", 0.08, 0.04, 660); },
+  page() { this.tone(392, "sine", 0.06, 0.035); this.tone(523, "triangle", 0.07, 0.03); },
+  lock() {
+    this.noise(0.05, 0.04, 1200);
+    this.tone(330, "square", 0.06, 0.03);
+    setTimeout(() => this.tone(494, "triangle", 0.1, 0.05), 50);
+  },
+  quizOk() {
+    this.tone(587, "sine", 0.08, 0.05);
+    setTimeout(() => this.tone(880, "triangle", 0.1, 0.05), 70);
+  },
+  quizBad() {
+    this.tone(196, "square", 0.12, 0.04, 130);
+    this.noise(0.08, 0.03, 500);
+  },
+  warn() { this.tone(311, "sawtooth", 0.1, 0.04); this.tone(233, "triangle", 0.14, 0.03); },
+  muteOn() { this.tone(180, "sine", 0.1, 0.04); },
+  muteOff() { this.tone(720, "sine", 0.08, 0.04); this.tone(960, "triangle", 0.08, 0.03); },
   win() {
     [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => this.tone(f, "sine", 0.18, 0.07), i * 110));
   }
 };
+try { SFX.muted = localStorage.getItem("cp-mute") === "1"; } catch (e) {}
 
 function toggleMute() {
+  SFX.unlock();
   SFX.muted = !SFX.muted;
-  if (!SFX.muted) { SFX.unlock(); SFX.tap(); }
+  try { localStorage.setItem("cp-mute", SFX.muted ? "1" : "0"); } catch (e) {}
+  if (SFX.muted) { /* already silent */ }
+  else SFX.muteOff();
   syncMuteButtons();
 }
 
@@ -531,7 +658,115 @@ const state = {
   qSeen: 0,
   picked: [],
   resolved: false,
-  quizKind: "triage"
+  quizKind: "triage",
+  rating: 1000,
+  mastery: {},
+  last: null,
+  pending: null,
+  lastQuiz: null,
+  lastPair: null,
+  totals: { s1: 0, s2: 0, s3: 0, s2ok: 0, s3ok: 0, s3half: 0 },
+  debPage: 0,
+  advantage: null,
+  lastCase: null,
+  tier: "easy",
+  easyDone: 0
+};
+
+const EASY_LEN = 8;
+const EASY_WRONG = [
+  "The waiting-room fern",
+  "A cat's left whisker",
+  "Yesterday's weather",
+  "The receptionist's coffee",
+  "A squeaky lobby toy",
+  "The parking-lot puddle"
+];
+
+const ADV_EASY = [
+  { id: "glow", title: "Both glow", text: "Next hand: both correct cards light up." },
+  { id: "kinds", title: "Kind labels", text: "Next hand: target kinds are named in the prompt." },
+  { id: "drop", title: "Drop a decoy", text: "Next hand: only 3 cards, still two right." },
+  { id: "peek", title: "Peek next", text: "See the next dog's complaint before the visit." },
+  { id: "bank", title: "+15 banked", text: "Take fifteen points now. No next-hand twist." }
+];
+
+const GOOD_BONUS = [
+  { id: "double", title: "Double down", text: "Next pair scores twice." },
+  { id: "reveal", title: "Chart flash", text: "One correct card glows on the next deck." },
+  { id: "shield", title: "Streak shield", text: "The next miss will not break your streak." },
+  { id: "boost", title: "+12 consult", text: "Bank twelve points now." }
+];
+const BAD_BONUS = [
+  { id: "fog", title: "Fog chart", text: "Next deck hides product names." },
+  { id: "tax", title: "Chart fee", text: "Next pair loses 8 points." },
+  { id: "noise", title: "Lobby noise", text: "Next hand has an extra decoy." }
+];
+
+function flyBonus(ok, bonus) {
+  const layer = $("flylayer");
+  if (!layer) return;
+  const card = document.createElement("div");
+  card.className = "bonusfly " + (ok ? "ok" : "no");
+  card.innerHTML = `<div class="tag">${ok ? "Correct bonus" : "Miss bonus"}</div><h3>${bonus.title}</h3><p>${bonus.text}</p>`;
+  layer.innerHTML = "";
+  layer.appendChild(card);
+  if (ok) SFX.ok(); else SFX.bad();
+  setTimeout(() => card.classList.add("out"), 980);
+  setTimeout(() => { if (card.parentNode) card.remove(); }, 1400);
+}
+
+const SCORE = {
+  logit(x) { return 1 / (1 + Math.exp(-x)); },
+  jaccard(a, b) {
+    const A = new Set(a), B = new Set(b);
+    let inter = 0;
+    A.forEach(x => { if (B.has(x)) inter++; });
+    const uni = new Set([...a, ...b]).size || 1;
+    return inter / uni;
+  },
+  dice(a, b) {
+    const A = new Set(a), B = new Set(b);
+    let inter = 0;
+    A.forEach(x => { if (B.has(x)) inter++; });
+    return (2 * inter) / ((a.length || 1) + (b.length || 1));
+  },
+  caseRating(c) {
+    return 800 + (c.d || 10) * 12 + (c.stress || 3) * 18 + (c.answer.includes("er") ? 80 : 0);
+  },
+  safety(c, picked) {
+    const needER = c.answer.includes("er");
+    const playedER = picked.includes("er");
+    const playedWait = picked.includes("wait");
+    const critical = (c.d || 0) >= 18 || c.band === "critical" || needER;
+    let u = 0;
+    if (needER && !playedER) u -= 24;
+    if (!needER && playedER) u -= 6;
+    if (critical && playedWait) u -= 16;
+    if (needER && playedER) u += 8;
+    if (!needER && !playedER && !playedWait) u += 2;
+    return u;
+  },
+  grade(c, picked, streak, rating) {
+    const J = this.jaccard(picked, c.answer);
+    const D = this.dice(picked, c.answer);
+    const diff = ((c.d || 10) / 50) + ((c.stress || 3) / 20);
+    const p = this.logit(1.1 * (J - 0.45) - 0.65 * diff);
+    const setPts = Math.round(42 * (0.55 * J + 0.45 * D) * (0.75 + 0.55 * diff));
+    const streakMult = 1 + Math.log(1 + streak) * 0.16;
+    const safety = this.safety(c, picked);
+    const expected = this.logit((rating - this.caseRating(c)) / 220);
+    const outcome = J;
+    const K = 28;
+    const dRating = Math.round(K * (outcome - expected));
+    const hits = picked.filter(k => c.answer.includes(k)).length;
+    const raw = Math.round(setPts * (hits === 2 ? streakMult : 1) + safety);
+    const pts = raw;
+    return {
+      jaccard: J, dice: D, setPts, streakMult, safety, pts, dRating,
+      expected, hits, p
+    };
+  }
 };
 
 const $ = (id) => document.getElementById(id);
@@ -546,6 +781,12 @@ document.querySelectorAll("#home .mode").forEach(btn => {
 });
 
 $("startBtn").onclick = () => { SFX.unlock(); SFX.tap(); show("brief"); };
+$("labBtn").onclick = () => { SFX.tap(); show("lab"); };
+$("labHome").onclick = () => { SFX.tap(); show("home"); };
+$("labPlay").onclick = () => { SFX.tap(); show("brief"); };
+$("specBtn").onclick = () => { SFX.tap(); show("specs"); };
+$("specHome").onclick = () => { SFX.tap(); show("home"); };
+$("specPlay").onclick = () => { SFX.tap(); show("brief"); };
 $("briefGo").onclick = () => { SFX.unlock(); start(); };
 $("briefHome").onclick = () => { SFX.tap(); show("home"); };
 $("againBtn").onclick = () => { SFX.unlock(); start(); };
@@ -553,7 +794,7 @@ $("homeBtn").onclick = () => { SFX.tap(); show("home"); };
 $("quitBtn").onclick = finish;
 $("quizQuit").onclick = finish;
 $("debQuit").onclick = finish;
-$("nextBtn").onclick = () => { SFX.next(); nextCase(); };
+$("nextBtn").onclick = () => { SFX.next(); advanceDebrief(); };
 $("muteHome").onclick = toggleMute;
 $("mutePlay").onclick = toggleMute;
 $("muteQuiz").onclick = toggleMute;
@@ -575,6 +816,7 @@ function syncMuteButtons() {
 function show(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("on"));
   $(id).classList.add("on");
+  if (SFX.ctx) SFX.page();
 }
 
 function dogMap(sys) {
@@ -620,6 +862,7 @@ function start() {
   }
   state.queue = pool;
   state.i = 0;
+  if (state.mode === "hard") state.tier = "hard";
   state.score = 0;
   state.seen = 0;
   state.correct = 0;
@@ -627,6 +870,18 @@ function start() {
   state.best = 0;
   state.qCorrect = 0;
   state.qSeen = 0;
+  state.rating = 1000;
+  state.mastery = {};
+  state.last = null;
+  state.pending = null;
+  state.lastQuiz = null;
+  state.lastPair = null;
+  state.totals = { s1: 0, s2: 0, s3: 0, s2ok: 0, s3ok: 0, s3half: 0 };
+  state.debPage = 0;
+  state.advantage = null;
+  state.lastCase = null;
+  state.tier = "easy";
+  state.easyDone = 0;
   show("play");
   deal();
 }
@@ -687,10 +942,12 @@ function deal() {
   show("play");
   $("hudCase").textContent = `Case ${state.i + 1} / ${state.queue.length}`;
   $("hudScore").textContent = `Score ${state.score}`;
+  if ($("liveQuiz")) $("liveQuiz").style.display = "block";
   $("slots").style.display = "none";
   $("deck").style.display = "none";
   document.querySelector("#play .deck-label").style.display = "none";
   $("pickHint").style.display = "none";
+  if ($("liveQuiz")) $("liveQuiz").style.display = "none";
   $("caseCard").innerHTML = patientHTML(c) + `
     <button type="button" class="anat-btn" id="anatToggle">${c.sys ? "Hide anatomy map" : "Open advanced anatomy (optional)"}</button>
     <div class="anatomy ${c.sys ? "on" : ""}" id="anatPanel">
@@ -703,7 +960,9 @@ function deal() {
   $("caseCard").style.animation = "deal .45s ease";
   wireAnatomy($("caseCard"));
   $("toQuiz").onclick = () => { SFX.next(); openQuiz(); };
-  $("prompt").innerHTML = `<span class="stepdot">Screen 1 of 4</span><br><b>Read ${c.name}.</b> Then tap through to the question.`;
+  const peek = state.advantage && state.advantage.id === "peek";
+  const nxt = state.queue[state.i + 1];
+  $("prompt").innerHTML = `<span class="stepdot">Screen 1 of 4</span><br><b>Read ${c.name}.</b> Then tap through to the question.${peek && nxt ? `<div class="active-bonus">Peek next: ${nxt.name} — ${nxt.ail}</div>` : ""}`;
   SFX.deal();
 }
 
@@ -713,58 +972,108 @@ function triageFor(c) {
   return "home";
 }
 
+function fillOpts(box, items) {
+  box.innerHTML = "";
+  delete box.dataset.locked;
+  items.forEach(([text, ok]) => {
+    const b = document.createElement("button");
+    b.className = "qopt";
+    b.textContent = text;
+    b.onclick = () => gradeQuiz(b, ok);
+    box.appendChild(b);
+  });
+}
+
 function openQuiz() {
+  state.qStep = 0;
+  state.qChain = [];
   const c = state.queue[state.i];
-  const sys = c.sys || guessSys(c);
-  const tissueQ = Math.random() < 0.5 || !!c.sys;
+  const hard = state.tier === "hard";
+  const tissueQ = hard ? true : Math.random() < 0.45;
   state.quizKind = tissueQ ? "tissue" : "triage";
   show("quiz");
-  $("quizHud").textContent = `Q · case ${state.i + 1}`;
+  $("quizHud").textContent = `${hard ? "Hard" : "Easy"} Q · ${state.i + 1}`;
   $("quizScore").textContent = `Score ${state.score}`;
   $("quizCard").innerHTML = patientHTML(c);
   const box = $("quizOpts");
   box.innerHTML = "";
   delete box.dataset.locked;
-  if (tissueQ) {
-    $("quizPrompt").innerHTML = `<span class="stepdot">Screen 2 of 4</span><br><b>Which structure is the problem?</b>`;
-    const right = fallbackPart(c);
-    const pool = [
-      "External ear canal and pinna",
-      "Gingiva and periodontal ligament",
-      "Stomach and gastric outflow",
-      "Intestinal lumen and mucosa",
-      "Coxofemoral joint cartilage",
-      "Intervertebral disc and cord",
-      "Cornea",
-      "Heart and pulmonary vessels",
-      "Epidermis and dermis",
-      "Anal sacs at 4 and 8 o'clock",
-      "Limbic threat circuit",
-      "Nares, palate, trachea",
-      "Stifle ligaments / cartilage",
-      "Digital pads",
-      "Renal tubules"
-    ].filter(x => x !== right);
-    const opts = [right];
-    while (opts.length < 4) {
-      const x = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
-      if (x) opts.push(x);
+  const rightPart = c.part || fallbackPart(c);
+  if (!hard) {
+    $("quizPrompt").innerHTML = `<span class="stepdot">Easy set · screen 2</span><br><b>${tissueQ ? "Which thing is actually the problem?" : "Where should this visit go?"}</b>`;
+    if (tissueQ) {
+      const opts = [rightPart, ...EASY_WRONG.sort(() => Math.random() - 0.5).slice(0, 2)];
+      opts.sort(() => Math.random() - 0.5).forEach(text => {
+        const b = document.createElement("button");
+        b.className = "qopt";
+        b.textContent = text;
+        b.onclick = () => gradeQuiz(b, text === rightPart);
+        box.appendChild(b);
+      });
+    } else {
+      const right = triageFor(c);
+      const easyLab = {
+        home: "Home — " + c.name + " looks stable enough for a product plan",
+        clinic: "Clinic today — " + c.name + " needs an exam or test",
+        er: "ER now — waiting is unsafe for " + c.name
+      };
+      const wrongLab = {
+        home: "Ignore it and hope the fern helps",
+        clinic: "Book a grooming photo instead",
+        er: "Drive the opposite direction of the hospital"
+      };
+      const keys = [right, ...["home","clinic","er"].filter(k => k !== right).slice(0, 1)];
+      keys.sort(() => Math.random() - 0.5).forEach(k => {
+        const b = document.createElement("button");
+        b.className = "qopt";
+        b.textContent = k === right ? easyLab[k] : wrongLab[k];
+        b.onclick = () => gradeQuiz(b, k === right);
+        box.appendChild(b);
+      });
     }
-    opts.sort(() => Math.random() - 0.5);
-    opts.forEach(text => {
+    return;
+  }
+  $("quizPrompt").innerHTML = `<span class="stepdot">Hard set · screen 2</span><br><b>${tissueQ ? "Name the precise tissue." : "Triage with no extra hint."}</b>`;
+  if (tissueQ) {
+    const close = {
+      ear: ["Horizontal canal + tympanum", "Middle ear / bulla", "Pinna cartilage only"],
+      eye: ["Corneal stroma", "Conjunctiva", "Lens"],
+      mouth: ["Periodontal ligament + alveolar bone", "Enamel only", "Tongue mucosa"],
+      heart: ["Pulmonary arteries", "Mitral leaflets", "Pericardial sac"],
+      stomach: ["Pylorus / gastric volvulus risk", "Esophagus", "Colon"],
+      gi: ["Jejunal lumen", "Pancreatic right limb", "Rectum"],
+      hip: ["Coxofemoral cartilage", "Sacroiliac joint", "Stifle CCL"],
+      spine: ["T-L disc + cord", "Cervical facet", "Pelvic nerve"],
+      skin: ["Epidermis + dermis", "Subcutis only", "Claw matrix"],
+      anal: ["Anal sacs at 4 and 8 o'clock", "Rectal mucosa", "Perineal hernia space"],
+      brain: ["Amygdala / HPA axis", "Cerebellar cortex", "Optic chiasm"],
+      airway: ["Nares + palate + trachea", "Bronchioles only", "Larynx alone"],
+      stifle: ["Cranial cruciate inside the knee", "Hip capsule", "Achilles tendon"],
+      paw: ["Digital pad epithelium", "Carpal pad only", "Metatarsal skin"],
+      kidney: ["Renal tubules / collecting ducts", "Bladder apex", "Urethral process"]
+    };
+    const sys = c.sys || guessSys(c);
+    const pool = (close[sys] || [rightPart]).slice();
+    if (!pool.includes(rightPart)) pool.unshift(rightPart);
+    const opts = [];
+    const seen = new Set();
+    pool.forEach(x => { if (!seen.has(x) && opts.length < 4) { opts.push(x); seen.add(x); } });
+    const filler = ["Synovial fluid only", "Third eyelid gland", "Adrenal cortex", "Nuchal ligament"];
+    filler.forEach(x => { if (opts.length < 4 && !seen.has(x)) { opts.push(x); seen.add(x); } });
+    const correct = pool[0];
+    opts.sort(() => Math.random() - 0.5).forEach(text => {
       const b = document.createElement("button");
       b.className = "qopt";
       b.textContent = text;
-      b.onclick = () => gradeQuiz(b, text === right);
+      b.onclick = () => gradeQuiz(b, text === correct);
       box.appendChild(b);
     });
   } else {
-    $("quizPrompt").innerHTML = `<span class="stepdot">Screen 2 of 4</span><br><b>Where does this visit belong?</b>`;
     const right = triageFor(c);
     const labels = {
-      home: "Home plan with the right product",
-      clinic: "Clinic today — exam / test / Rx",
-      er: "Emergency now — do not wait"
+      home: "Home plan only",
+      clinic: "Same-day clinic diagnostics",
+      er: "Emergency now"
     };
     ["home","clinic","er"].forEach(k => {
       const b = document.createElement("button");
@@ -776,24 +1085,84 @@ function openQuiz() {
   }
 }
 
+function openQuizAction() {
+  const c = state.queue[state.i];
+  const hard = state.tier === "hard";
+  const needER = c.answer.includes("er");
+  const needClinic = c.answer.includes("clinic") || c.answer.includes("heartgard");
+  show("quiz");
+  $("quizHud").textContent = `${hard ? "Hard" : "Easy"} Q2 · first move`;
+  $("quizScore").textContent = `Score ${state.score}`;
+  $("quizCard").innerHTML = patientHTML(c);
+  $("quizPrompt").innerHTML = `<span class="stepdot">${hard ? "Hard" : "Easy"} · screen 2b</span><br><b>What is the first move?</b>`;
+  const right = needER ? "Get ${c.name} to emergency care now".replace("${c.name}", c.name)
+    : needClinic ? "Exam / test before any shopping"
+    : "Start the home-care pair after a look-over";
+  const items = hard ? [
+    [right, true],
+    ["Give a random human pain pill", false],
+    ["Wait three days no matter the signs", false],
+    ["Search only by lowest price", false]
+  ] : [
+    [right, true],
+    ["Buy the first chew you see and leave", false],
+    ["Ask the fern in the lobby", false]
+  ];
+  fillOpts($("quizOpts"), items.sort(() => Math.random() - 0.5));
+}
+
+function openQuizFamily() {
+  const c = state.queue[state.i];
+  const hard = state.tier === "hard";
+  const kinds = c.answer.map(k => PRODUCTS[k] && PRODUCTS[k].kind).filter(Boolean);
+  const right = kinds[0] || "Clinic action";
+  const decoys = ["Lawn fertilizer", "People toothpaste", "Cat-only flea vial", "Essential-oil diffuser", "Human ibuprofen"];
+  show("quiz");
+  $("quizHud").textContent = `${hard ? "Hard" : "Easy"} Q3 · tool family`;
+  $("quizScore").textContent = `Score ${state.score}`;
+  $("quizCard").innerHTML = patientHTML(c);
+  $("quizPrompt").innerHTML = `<span class="stepdot">${hard ? "Hard" : "Easy"} · screen 2c</span><br><b>Which tool family belongs in the pair?</b>`;
+  const wrong = decoys.sort(() => Math.random() - 0.5).slice(0, hard ? 3 : 2);
+  const items = [[right, true], ...wrong.map(w => [w, false])].sort(() => Math.random() - 0.5);
+  fillOpts($("quizOpts"), items);
+}
+
 function gradeQuiz(btn, ok) {
   if (btn.parentNode.dataset.locked) return;
   btn.parentNode.dataset.locked = "1";
   state.qSeen += 1;
+  const pack = ok ? GOOD_BONUS : BAD_BONUS;
+  const bonus = pack[Math.floor(Math.random() * pack.length)];
   if (ok) {
     btn.classList.add("good");
     state.qCorrect += 1;
-    state.score += 8;
-    SFX.ok();
+    state.score += state.tier === "hard" ? 14 : 8;
+    if (bonus.id === "boost") state.score += 12;
+    else state.pending = bonus;
   } else {
     btn.classList.add("bad");
-    SFX.bad();
     [...btn.parentNode.children].forEach(el => {
       if (el !== btn) el.style.opacity = ".65";
     });
+    state.pending = bonus;
   }
+  if (state.qStep === 0) flyBonus(ok, bonus);
+  else if (ok) SFX.quizOk();
+  else SFX.quizBad();
+  const pts = ok ? (state.tier === "hard" ? 14 : 8) + (ok && bonus.id === "boost" && state.qStep === 0 ? 12 : 0) : 0;
+  if (!state.qChain) state.qChain = [];
+  state.qChain.push({ ok, bonus, pts });
+  state.lastQuiz = {
+    ok: state.qChain.every(x => x.ok),
+    bonus: bonus,
+    pts: state.qChain.reduce((n, x) => n + x.pts, 0),
+    title: state.qChain.filter(x => x.ok).length + "/" + state.qChain.length
+  };
+  state.totals.s2 += pts;
   $("quizScore").textContent = `Score ${state.score}`;
-  setTimeout(openPick, 620);
+  const nxt = state.qStep === 0 ? openQuizAction : state.qStep === 1 ? openQuizFamily : openPick;
+  state.qStep += 1;
+  setTimeout(nxt, state.qStep === 1 ? 900 : 620);
 }
 
 function openPick() {
@@ -803,13 +1172,19 @@ function openPick() {
   show("play");
   $("hudCase").textContent = `Pick 2 · ${c.name}`;
   $("hudScore").textContent = `Score ${state.score}`;
+  const lq = $("liveQuiz");
+  if (lq) lq.style.display = "none";
   $("slots").style.display = "grid";
   $("deck").style.display = "flex";
   document.querySelector("#play .deck-label").style.display = "";
   $("pickHint").style.display = "";
   paintSlots();
   $("caseCard").innerHTML = patientHTML(c);
-  $("prompt").innerHTML = `<span class="stepdot">Screen 3 of 4</span><br><b>Tap two solution cards</b> for ${c.name}. Second tap locks the pair.`;
+  const pend = state.pending ? `<div class="active-bonus">Bonus: ${state.pending.title} — ${state.pending.text}</div>` : "";
+  const adv = state.advantage;
+  let hint = "";
+  if (adv && adv.id === "kinds") hint = `<div class="active-bonus">Target kinds: ${c.answer.map(k => PRODUCTS[k].kind).join(" + ")}</div>`;
+  $("prompt").innerHTML = `<b>Tap two cards</b> for ${c.name}.${pend}${hint}${adv && adv.id !== "kinds" ? `<div class="active-bonus">Advantage: ${adv.title}</div>` : ""}`;
   renderDeck(c);
 }
 
@@ -869,7 +1244,9 @@ function fallbackPart(c) {
 
 function renderDeck(c) {
   const keys = new Set(c.answer);
-  while (keys.size < 4) {
+  let want = state.pending && state.pending.id === "noise" ? 5 : 4;
+  if (state.advantage && state.advantage.id === "drop") want = 3;
+  while (keys.size < want) {
     const extra = DISTRACTORS[Math.floor(Math.random() * DISTRACTORS.length)];
     if (![...c.answer].includes(extra)) keys.add(extra);
   }
@@ -878,6 +1255,10 @@ function renderDeck(c) {
     const j = Math.floor(Math.random() * (i + 1));
     [hand[i], hand[j]] = [hand[j], hand[i]];
   }
+  const fog = state.pending && state.pending.id === "fog";
+  const reveal = (state.pending && state.pending.id === "reveal") || (state.advantage && state.advantage.id === "glow");
+  const glowAll = state.advantage && state.advantage.id === "glow";
+  let revealed = false;
   const deck = $("deck");
   deck.innerHTML = "";
   hand.forEach(k => {
@@ -885,7 +1266,14 @@ function renderDeck(c) {
     const btn = document.createElement("button");
     btn.className = "sol";
     btn.dataset.key = k;
-    btn.innerHTML = `<div class="kind">${p.kind}</div><div class="title">${p.name}</div><div class="why">${k === "wait" ? "Only if the dog is bright, eating, and this is truly mild." : k === "er" ? "Use when delay can cost an eye, a gut, or a life." : k === "clinic" ? "Exam, cytology, imaging, or a prescription — not a shopping bag." : "A real product page exists for this card."}</div>`;
+    const title = fog ? "Covered label" : p.name;
+    const why = fog ? "Fog chart is active. Read the kind line." : (k === "wait" ? "Only if the dog is bright, eating, and this is truly mild." : k === "er" ? "Use when delay can cost an eye, a gut, or a life." : k === "clinic" ? "Exam, cytology, imaging, or a prescription — not a shopping bag." : "A real product page exists for this card.");
+    const pip = (p.kind || "?").slice(0, 1).toUpperCase();
+    btn.innerHTML = `<span class="pip tl">${pip}</span><span class="pip br">${pip}</span><div class="kind">${p.kind}</div><div class="title">${title}</div><div class="why">${why}</div>`;
+    if (c.answer.includes(k) && (glowAll || (reveal && !revealed))) {
+      btn.style.boxShadow = "0 0 0 2px #7dcea0";
+      revealed = true;
+    }
     btn.onclick = () => { SFX.pick(); pick(btn, k); };
     deck.appendChild(btn);
   });
@@ -906,8 +1294,8 @@ function pick(btn, key) {
   state.picked.push(key);
   btn.classList.add("picked");
   paintSlots();
-  SFX.pick();
-  if (state.picked.length === 2) resolvePair();
+  if (state.picked.length === 2) { SFX.lock(); resolvePair(); }
+  else SFX.pick();
 }
 
 function resolvePair() {
@@ -916,36 +1304,132 @@ function resolvePair() {
   state.resolved = true;
   state.seen += 1;
   const need = new Set(c.answer);
-  const got = state.picked.filter(k => need.has(k));
-  const hits = got.length;
+  const hits = state.picked.filter(k => need.has(k)).length;
   document.querySelectorAll(".sol").forEach(s => {
     if (need.has(s.dataset.key)) s.classList.add("rightpick");
     if (state.picked.includes(s.dataset.key) && !need.has(s.dataset.key)) s.classList.add("wrongpick");
   });
-  let pts = 0;
-  if (hits === 2) {
-    pts = 16 + c.stress + Math.min(c.d, 16);
-    state.correct += 1;
-    state.streak += 1;
-    SFX.ok();
-  } else if (hits === 1) {
-    pts = 7;
-    state.streak = 0;
-    SFX.tap();
-  } else {
-    state.streak = 0;
-    SFX.bad();
-  }
+  const used = state.pending;
+  state.pending = null;
+  const spentAdv = state.advantage;
+  state.advantage = null;
+  if (hits === 2) { state.correct += 1; state.streak += 1; }
+  else if (used && used.id === "shield") { /* streak held */ }
+  else { state.streak = 0; }
+  const g = SCORE.grade(c, state.picked, state.streak, state.rating);
+  if (used && used.id === "double") g.pts *= 2;
+  if (used && used.id === "tax") g.pts -= 8;
+  const pairOk = hits === 2;
+  flyBonus(pairOk, pairOk
+    ? { title: hits === 2 ? "Clean pair" : "Held", text: used && used.id === "double" ? "Double down applied." : "+" + g.pts + " on the chart." }
+    : { title: hits === 1 ? "Split pair" : "Missed pair", text: used && used.id === "shield" ? "Streak shield held." : (used && used.id === "tax" ? "Chart fee applied." : "Bonus spent.") });
   state.best = Math.max(state.best, state.streak);
-  state.score += pts;
-  const played = state.picked.map(k => PRODUCTS[k].name).join(" + ");
-  const ideal = c.answer.map(k => PRODUCTS[k].name).join(" + ");
-  const headline = hits === 2 ? "Both cards land." : hits === 1 ? "One of two." : "Different pair.";
-  $("debHud").textContent = `Debrief · ${c.name}`;
+  state.score = Math.max(0, state.score + g.pts);
+  state.rating = Math.max(600, Math.min(1800, state.rating + g.dRating));
+  const sys = c.sys || guessSys(c);
+  const prev = state.mastery[sys] ?? 0.4;
+  state.mastery[sys] = prev * 0.7 + (g.jaccard) * 0.3;
+  state.last = g;
+  state.lastPair = { hits, pts: g.pts, played: state.picked.slice(), used };
+  state.totals.s1 += 1;
+  state.totals.s3 += g.pts;
+  if (hits === 2) state.totals.s3ok += 1;
+  else if (hits === 1) state.totals.s3half += 1;
+  const q = state.lastQuiz || { ok: false, bonus: { title: "—" }, pts: 0 };
+  state.lastCase = {
+    c, g, hits, sys, q,
+    played: state.picked.map(k => PRODUCTS[k].name).join(" + "),
+    ideal: c.answer.map(k => PRODUCTS[k].name).join(" + "),
+    casePts: q.pts + g.pts,
+    used
+  };
+  state.debPage = 0;
+  setTimeout(() => { show("debrief"); paintDebrief(); }, 1100);
+}
+
+function paintDebrief() {
+  const L = state.lastCase;
+  if (!L) return;
+  SFX.page();
+  const { c, g, hits, sys, q } = L;
   $("debScore").textContent = `Score ${state.score}`;
   $("debCard").innerHTML = patientHTML(c);
-  $("result").innerHTML = `<span class="stepdot">Screen 4 of 4</span><br><b>${headline}</b> You played ${played}.<br>Target pair: ${ideal}.<br>${c.why}${c.note ? "<br><i>" + c.part + "</i>" : ""}<br>${productLinks(c)}<div class="scoreline">+${pts} · pair ${hits}/2 · streak ${state.streak} · questions ${state.qCorrect}/${state.qSeen}</div>`;
-  setTimeout(() => show("debrief"), 280);
+  $("advPick").style.display = "none";
+  $("advPick").innerHTML = "";
+  const page = state.debPage;
+  if (page === 0) {
+    $("debHud").textContent = `4.1 Verdict · ${c.name}`;
+    $("result").innerHTML = `<span class="stepdot">Screen 4.1</span><br><b>${hits === 2 ? "Clean pair." : hits === 1 ? "Split pair." : "Missed pair."}</b> You played ${L.played}.<br>Target pair: ${L.ideal}.<br>${c.why}${c.note ? "<br><i>" + c.part + "</i>" : ""}<br>${productLinks(c)}
+      <div class="scoreline">Question was ${q.ok ? "correct" : "a miss"} (${q.bonus.title}). Pair ${hits}/2 · this case +${L.casePts}.</div>`;
+    $("nextBtn").textContent = "Score math →";
+  } else if (page === 1) {
+    $("debHud").textContent = "4.2 Score algorithm";
+    $("result").innerHTML = `<span class="stepdot">Screen 4.2 · how +${g.pts} was built</span>
+      <div class="break">
+        <div class="br"><span>Jaccard |you ∩ key| / |you ∪ key|</span><b>${g.jaccard.toFixed(2)}</b></div>
+        <div class="br"><span>Dice / F1 (near-miss credit)</span><b>${g.dice.toFixed(2)}</b></div>
+        <div class="br"><span>Set × difficulty/stress</span><b>${g.setPts}</b></div>
+        <div class="br"><span>Streak multiplier</span><b>×${g.streakMult.toFixed(2)}</b></div>
+        <div class="br"><span>Safety (ER / wait)</span><b>${g.safety >= 0 ? "+" : ""}${g.safety}</b></div>
+        <div class="br"><span>Quiz points this case</span><b>+${q.pts}</b></div>
+        <div class="br"><span>Hand modifier</span><b>${L.used ? L.used.title : "none"}</b></div>
+        <div class="br"><span>Elo-lite</span><b>${g.dRating >= 0 ? "+" : ""}${g.dRating} → ${state.rating}</b></div>
+        <div class="br"><span>Pair points after modifiers</span><b>+${g.pts}</b></div>
+        <div class="br"><span>Case total (Q + pair)</span><b>+${L.casePts}</b></div>
+      </div>`;
+    $("nextBtn").textContent = "Screen totals →";
+  } else if (page === 2) {
+    const t = state.totals;
+    $("debHud").textContent = "4.3 Totals";
+    $("result").innerHTML = `<span class="stepdot">Screen 4.3 · this case and the run</span>
+      <div class="break">
+        <div class="br"><span>1 · Patient</span><b>${c.name} · ${c.ail}</b></div>
+        <div class="br"><span>2 · Questions</span><b>${q.title || (q.ok ? "Correct" : "Miss")} · +${q.pts} · ${(q.bonus && q.bonus.title) || ""}</b></div>
+        <div class="br"><span>3 · Two cards</span><b>${hits}/2 hits · +${g.pts}</b></div>
+        <div class="br"><span>4 · Case total</span><b>+${L.casePts}</b></div>
+        <div class="br"><span>Patients read</span><b>${t.s1}</b></div>
+        <div class="br"><span>Questions right</span><b>${t.s2ok} / ${state.qSeen} · ${t.s2} pts</b></div>
+        <div class="br"><span>Pairs</span><b>${t.s3ok} clean · ${t.s3half} split · ${t.s3} pts</b></div>
+        <div class="br"><span>Running score</span><b>${state.score}</b></div>
+      </div>`;
+    $("nextBtn").textContent = "Advantage cards →";
+  } else {
+    $("debHud").textContent = "4.4 Advantage";
+    $("result").innerHTML = `<span class="stepdot">Screen 4.4</span><br><b>Tap one help card</b> or skip.`;
+    const box = $("advPick");
+    box.style.display = "grid";
+    const pool = ADV_EASY.slice().sort(() => Math.random() - 0.5);
+    const n = hits === 2 ? 3 : hits === 1 ? 2 : 1;
+    pool.slice(0, n).forEach(card => {
+      const b = document.createElement("button");
+      b.className = "qopt";
+      b.innerHTML = `<b>${card.title}</b><br><span style="font-weight:500;font-size:13px;color:#cbbfae">${card.text}</span>`;
+      b.onclick = () => takeAdvantage(card);
+      box.appendChild(b);
+    });
+    $("nextBtn").textContent = "Skip help · next case →";
+  }
+}
+
+function takeAdvantage(card) {
+  SFX.ok();
+  flyBonus(true, card);
+  if (card.id === "bank") state.score += 15;
+  else state.advantage = card;
+  $("advPick").style.display = "none";
+  $("result").innerHTML += `<div class="active-bonus">Banked: ${card.title}</div>`;
+  $("debScore").textContent = `Score ${state.score}`;
+  $("nextBtn").textContent = "Next case →";
+  state.debPage = 4;
+}
+
+function advanceDebrief() {
+  if (state.debPage < 3) {
+    state.debPage += 1;
+    paintDebrief();
+    return;
+  }
+  nextCase();
 }
 
 function productLinks(c) {
@@ -961,9 +1445,60 @@ function productLinks(c) {
 }
 
 function nextCase() {
+  if (state.tier === "easy") {
+    state.easyDone += 1;
+    if (state.easyDone >= EASY_LEN) {
+      showAdvance();
+      return;
+    }
+  }
   if (state.i >= state.queue.length - 1) return finish();
   state.i += 1;
   deal();
+}
+
+function showAdvance() {
+  SFX.warn();
+  show("advance");
+  $("advLede").textContent = `Easy set: ${state.easyDone} visits. Score ${state.score}. Pick a card.`;
+  const box = $("advanceOpts");
+  box.innerHTML = "";
+  const cards = [
+    { id: "hard", title: "Advance — hard set", text: "Closer anatomy choices. More points. Same two-card play." },
+    { id: "more", title: "Stay easy a little longer", text: "Five more easy visits, then this gate returns." },
+    { id: "mix", title: "Mixed board", text: "Jump into remaining cases with hard questions only." }
+  ];
+  cards.forEach(card => {
+    const b = document.createElement("button");
+    b.className = "qopt";
+    b.innerHTML = `<b>${card.title}</b><br><span style="font-weight:500;color:#cbbfae">${card.text}</span>`;
+    b.onclick = () => pickAdvance(card);
+    box.appendChild(b);
+  });
+}
+
+function pickAdvance(card) {
+  SFX.ok();
+  flyBonus(true, { title: card.title, text: card.text });
+  if (card.id === "more") {
+    state.easyDone = Math.max(0, EASY_LEN - 5);
+    state.tier = "easy";
+  } else {
+    state.tier = "hard";
+    if (card.id === "mix") {
+      const rest = state.queue.slice(state.i + 1);
+      for (let i = rest.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [rest[i], rest[j]] = [rest[j], rest[i]];
+      }
+      state.queue = state.queue.slice(0, state.i + 1).concat(rest);
+    }
+  }
+  setTimeout(() => {
+    if (state.i >= state.queue.length - 1) return finish();
+    state.i += 1;
+    deal();
+  }, 700);
 }
 
 function finish() {
@@ -974,8 +1509,21 @@ function finish() {
   $("sStreak").textContent = state.best;
   $("sSeen").textContent = `${state.seen} · Q ${state.qCorrect}/${state.qSeen}`;
   $("endTitle").textContent = acc >= 75 ? "Rounds look clean." : acc >= 50 ? "Solid floor, keep drilling." : "The deck taught you something.";
+  const t = state.totals;
+  const es = $("endScreens");
+  if (es) es.innerHTML = `<b>Totals by screen</b>
+    1 · Patient cards read: ${t.s1}<br>
+    2 · Questions: ${state.qCorrect}/${state.qSeen} correct · ${t.s2} pts<br>
+    3 · Two-card plays: ${t.s3ok} clean · ${t.s3half} split · ${t.s3} pts<br>
+    4 · Combined run: ${state.score} pts`;
+  const mast = Object.entries(state.mastery).sort((a,b) => b[1]-a[1]).slice(0, 6)
+    .map(([k,v]) => `${k} ${(100*v).toFixed(0)}%`).join(" · ");
+  const extra = $("endNote");
+  if (extra) extra.textContent = `Rating ${state.rating}. Mastery: ${mast || "not enough plays yet."}`;
   SFX.win();
 }
+
+syncMuteButtons();
 </script>
 </body>
 </html>
