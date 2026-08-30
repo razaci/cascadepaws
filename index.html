@@ -322,13 +322,27 @@
     <div class="brand">How a visit runs</div>
     <h1>Four screens. Two cards.</h1>
     <div class="modes">
-      <div class="mode"><b>1 · Patient</b><span>Name, complaint, stress. Open anatomy if you want the tissue map.</span></div>
+      <div class="mode"><b>1 · Patient + illness</b><span>Read the dog. Name the illness. The chart then locks the official diagnosis.</span></div>
       <div class="mode"><b>2 · Three questions</b><span>Structure or triage, then first move, then tool family. Tap to advance.</span></div>
       <div class="mode"><b>3 · Two solutions</b><span>Tap card A, then card B. That is the play. No extra button.</span></div>
-      <div class="mode"><b>4 · Debrief chain</b><span>4.1 verdict · 4.2 score math · 4.3 totals · 4.4 advantage card.</span></div>
+      <div class="mode"><b>4 · Debrief</b><span>4.1 verdict · 4.2 score math · 4.3 advantage card.</span></div>
     </div>
     <button class="cta" id="briefGo">Deal the first case</button>
     <button class="cta ghost" id="briefHome">Back</button>
+  </section>
+
+  <section class="screen" id="dx">
+    <div class="hud">
+      <div class="pill" id="dxHud">Illness</div>
+      <div class="pill" id="dxScore">Score 0</div>
+      <button class="mute" id="muteDx" type="button">🔊</button>
+      <button class="link" id="dxQuit">Quit</button>
+    </div>
+    <article class="case" id="dxCard"></article>
+    <p class="prompt" id="dxPrompt"><b>Name the illness.</b></p>
+    <div class="qopts" id="dxOpts"></div>
+    <div class="result" id="dxResult"></div>
+    <button class="cta" id="dxGo" style="display:none">Continue to questions →</button>
   </section>
 
   <section class="screen" id="quiz">
@@ -407,7 +421,7 @@
     <div class="algo"><b>Patient card · portrait stock</b>Ratio ~3:4. Cream gradient #FFFDF8 → #F3EAD8. Double inset: 1px gold hairline + 6px ivory mat. Corner mark CP, 9px, #C9A227. Type: name 22/800, signalment 12/#5B6570, complaint 16/800. Band chip: routine #2F7D5A, standard #0D7377, complex #B5811A, critical #B34032. Avatar 54px rounded 16, hue from name.</div>
     <div class="algo"><b>Solution card · poker face</b>Ratio 2.5:3.5. Night field #243F45 → #15282C. 1px gold edge, 4px inner teal frame. Pips top-left and inverted bottom-right. Suit line (kind) 10px tracked gold. Title 15/800 cream. Body 12/#C9C0B0. Selected: gold ring. Hit: #7DCEA0 ring. Miss: #C45C4A ring.</div>
     <div class="algo"><b>Bonus fly-in</b>Max 280px. Correct: #2F7D5A → #0D7377. Miss: #8B3A32 → #4A1F22. Enters from +120% Y with 8° tilt, settles −2°. Holds ~1s, exits −30% Y.</div>
-    <div class="algo"><b>Advantage / advance cards</b>Full-width night buttons, 16px radius, left-aligned. Title bold cream, rule line in #CBBFAE. Same tap target as quiz options (44px+).</div>
+    <div class="algo"><b>Advantage / advance cards</b>Full-width night buttons, 16px radius, left-aligned. Title bold cream, rule line in #CBBFAE. Same tap target as quiz options (44px+). Offer: 3 after a clean pair, 2 after a split, 1 after a miss. Effect lasts one visit except +15 banked, which pays immediately.</div>
     <div class="algo"><b>Table</b>Navy #142833 field. Safe-area padding. Max column 480px. Type stack: Trebuchet / Avenir Next / Segoe. Motion under 500ms except bonus fly.</div>
     <button class="cta" id="specPlay">Deal a case</button>
     <button class="cta ghost" id="specHome">Back to title</button>
@@ -422,7 +436,6 @@
       <div class="stat"><b id="sStreak">0</b><span>Best streak</span></div>
       <div class="stat"><b id="sSeen">0</b><span>Cases seen</span></div>
     </div>
-    <div class="algo" id="endScreens"></div>
     <p class="lede" id="endNote"></p>
     <button class="cta" id="againBtn">Deal again</button>
     <button class="cta ghost" id="homeBtn">Back to title</button>
@@ -670,7 +683,8 @@ const state = {
   advantage: null,
   lastCase: null,
   tier: "easy",
-  easyDone: 0
+  easyDone: 0,
+  dxOfficial: null
 };
 
 const EASY_LEN = 8;
@@ -684,11 +698,11 @@ const EASY_WRONG = [
 ];
 
 const ADV_EASY = [
-  { id: "glow", title: "Both glow", text: "Next hand: both correct cards light up." },
-  { id: "kinds", title: "Kind labels", text: "Next hand: target kinds are named in the prompt." },
-  { id: "drop", title: "Drop a decoy", text: "Next hand: only 3 cards, still two right." },
-  { id: "peek", title: "Peek next", text: "See the next dog's complaint before the visit." },
-  { id: "bank", title: "+15 banked", text: "Take fifteen points now. No next-hand twist." }
+  { id: "glow", title: "Both glow", text: "Next visit only. On the two-card deck both correct cards get a green ring. Decoys stay dark. Spent when that pair locks." },
+  { id: "kinds", title: "Kind labels", text: "Next visit only. The pick prompt names the two target families. Product names stay hidden until you tap." },
+  { id: "drop", title: "Drop a decoy", text: "Next visit only. Hand is three cards: two answers plus one decoy. Same two-card lock." },
+  { id: "peek", title: "Peek next", text: "On the next patient card, a line under the prompt shows the following dog's name and complaint. Does not change this case." },
+  { id: "bank", title: "+15 banked", text: "Adds 15 to the running score when you tap it. No change to the next hand." }
 ];
 
 const GOOD_BONUS = [
@@ -793,6 +807,9 @@ $("againBtn").onclick = () => { SFX.unlock(); start(); };
 $("homeBtn").onclick = () => { SFX.tap(); show("home"); };
 $("quitBtn").onclick = finish;
 $("quizQuit").onclick = finish;
+$("dxQuit").onclick = finish;
+$("dxGo").onclick = () => { SFX.next(); openQuiz(); };
+$("muteDx").onclick = toggleMute;
 $("debQuit").onclick = finish;
 $("nextBtn").onclick = () => { SFX.next(); advanceDebrief(); };
 $("muteHome").onclick = toggleMute;
@@ -805,7 +822,7 @@ function syncMuteButtons() {
   const labelsOn = "Sound on · tap to mute";
   const labelsOff = "Sound off · tap to unmute";
   if ($("muteHome")) $("muteHome").textContent = SFX.muted ? labelsOff : labelsOn;
-  ["mutePlay","muteQuiz","muteDeb"].forEach(id => {
+  ["mutePlay","muteQuiz","muteDeb","muteDx"].forEach(id => {
     const el = $(id);
     if (!el) return;
     el.textContent = SFX.muted ? "🔇" : "🔊";
@@ -882,6 +899,16 @@ function start() {
   state.lastCase = null;
   state.tier = "easy";
   state.easyDone = 0;
+  if (state.mode === "hard") state.tier = "hard";
+  state.dxOfficial = null;
+  state.qStep = 0;
+  state.qChain = [];
+  state.resolved = false;
+  state.picked = [];
+  const dxBox = $("dxOpts");
+  if (dxBox) delete dxBox.dataset.locked;
+  const qBox = $("quizOpts");
+  if (qBox) delete qBox.dataset.locked;
   show("play");
   deal();
 }
@@ -900,9 +927,13 @@ function bandChip(c) {
   return ["d4", "Critical"];
 }
 
-function patientHTML(c) {
+function patientHTML(c, hideAil) {
   const [cls, label] = bandChip(c);
   const h = hue(c.name);
+  const locked = state.dxOfficial;
+  const ailLine = hideAil && !locked
+    ? `<div class="ail">Signs on the chart. Official diagnosis is not locked yet.</div>`
+    : `<div class="ail">${locked || c.ail}</div>`;
   return `
     <div class="row">
       <div style="display:flex;gap:10px;align-items:center">
@@ -914,13 +945,37 @@ function patientHTML(c) {
       </div>
       <span class="chip ${cls}">${label} · #${c.d}</span>
     </div>
-    <div class="ail">${c.ail}</div>
+    ${ailLine}
+    <div class="meta">${combineSymptoms(c).map(s => `<i>${s}</i>`).join("")}</div>
     <div class="bg">${c.bg}</div>
     <div class="meta">
       <i>Stress ${c.stress}/10</i>
       <i>Trigger: ${c.trigger}</i>
-      ${c.sys ? `<i>System: ${c.sys}</i>` : ""}
+      ${!hideAil && c.sys ? `<i>System: ${c.sys}</i>` : ""}
     </div>`;
+}
+
+function combineSymptoms(c) {
+  const blob = `${c.ail || ""} ${c.bg || ""} ${c.trigger || ""} ${c.part || ""}`.toLowerCase();
+  const tags = [];
+  const add = (re, tag) => { if (re.test(blob) && !tags.includes(tag)) tags.push(tag); };
+  add(/ear|otitis|head-shak|head shak|pinna|canal/, "head shake / ear odor");
+  add(/itch|allerg|hot spot|atopy|lick|skin|rash|yeast/, "itch / skin flare");
+  add(/dental|gingiv|tartar|periodont|tooth|halit/, "foul breath / tartar");
+  add(/vomit|diarrhea|gi |gastro|stool|colitis|pancrea/, "vomit / loose stool");
+  add(/ear.*red|red eye|cornea|ulcer|squint|tear/, "squint / eye pain");
+  add(/limp|arthr|hip|stifle|joint|acl|ccl|dysplas/, "limp / stiff joint");
+  add(/cough|heart|murmur|ascites|gag/, "cough / exercise fade");
+  add(/seiz|anxious|thunder|pace|pant/, "panic / storm sense");
+  add(/anal|scoot|gland/, "scooting / glands");
+  add(/obese|weight|hungry|diet/, "weight / food drive");
+  add(/urine|bladder|kidney|pu\/pd|drink/, "urine / drinking change");
+  add(/bloat|gdv|retcht|distend/, "unproductive retch");
+  add(/flea|tick|scratch/, "scratch / parasites");
+  add(/spine|disc|ivdd|drag|knuckle/, "back pain / weak rear");
+  add(/paw|pad|nail|lick foot/, "paw lick / pad sore");
+  if (!tags.length) tags.push("mixed canine signs");
+  return tags.slice(0, 4);
 }
 
 function wireAnatomy(root) {
@@ -948,22 +1003,77 @@ function deal() {
   document.querySelector("#play .deck-label").style.display = "none";
   $("pickHint").style.display = "none";
   if ($("liveQuiz")) $("liveQuiz").style.display = "none";
-  $("caseCard").innerHTML = patientHTML(c) + `
+  state.dxOfficial = null;
+  $("caseCard").innerHTML = patientHTML(c, true) + `
     <button type="button" class="anat-btn" id="anatToggle">${c.sys ? "Hide anatomy map" : "Open advanced anatomy (optional)"}</button>
     <div class="anatomy ${c.sys ? "on" : ""}" id="anatPanel">
       ${dogMap(c.sys || guessSys(c))}
       <p class="lab"><span class="sheet-note">Tissue</span><br><b>${c.part || fallbackPart(c)}</b><br>${c.note || "This visit still maps onto a real structure. Clinic first if you are guessing."}</p>
     </div>
-    <button type="button" class="cta" id="toQuiz" style="margin-top:12px">Tap to answer the question →</button>`;
+    <button type="button" class="cta" id="toQuiz" style="margin-top:12px">Name the illness →</button>`;
   $("caseCard").style.animation = "none";
   void $("caseCard").offsetWidth;
   $("caseCard").style.animation = "deal .45s ease";
   wireAnatomy($("caseCard"));
-  $("toQuiz").onclick = () => { SFX.next(); openQuiz(); };
+  $("toQuiz").onclick = () => { SFX.next(); openDx(); };
   const peek = state.advantage && state.advantage.id === "peek";
   const nxt = state.queue[state.i + 1];
-  $("prompt").innerHTML = `<span class="stepdot">Screen 1 of 4</span><br><b>Read ${c.name}.</b> Then tap through to the question.${peek && nxt ? `<div class="active-bonus">Peek next: ${nxt.name} — ${nxt.ail}</div>` : ""}`;
+  $("prompt").innerHTML = `<span class="stepdot">Screen 1</span><br><b>Read ${c.name}.</b> Name the illness. The chart will lock the official diagnosis.${peek && nxt ? `<div class="active-bonus">Peek next: ${nxt.name} — ${nxt.ail}</div>` : ""}`;
   SFX.deal();
+}
+
+function illnessPool() {
+  const src = (typeof CASES !== "undefined" ? CASES : []).concat(typeof ANATOMY_CASES !== "undefined" ? ANATOMY_CASES : []);
+  return [...new Set(src.map(c => c.ail).filter(Boolean))];
+}
+
+function openDx() {
+  const c = state.queue[state.i];
+  show("dx");
+  $("dxHud").textContent = `Illness · ${c.name}`;
+  $("dxScore").textContent = `Score ${state.score}`;
+  $("dxCard").innerHTML = patientHTML(c, true);
+  $("dxPrompt").innerHTML = `<b>What illness do you call this?</b> Combined signs are on the card. Pick one name. The chart then writes the official diagnosis.`;
+  $("dxResult").className = "result";
+  $("dxResult").innerHTML = "";
+  $("dxGo").style.display = "none";
+  const box = $("dxOpts");
+  delete box.dataset.locked;
+  const others = illnessPool().filter(a => a !== c.ail).sort(() => Math.random() - 0.5).slice(0, 3);
+  const opts = [c.ail, ...others].sort(() => Math.random() - 0.5);
+  box.innerHTML = "";
+  box.style.display = "grid";
+  opts.forEach(text => {
+    const b = document.createElement("button");
+    b.className = "qopt";
+    b.textContent = text;
+    b.onclick = () => lockDiagnosis(text, c);
+    box.appendChild(b);
+  });
+}
+
+function lockDiagnosis(guess, c) {
+  const box = $("dxOpts");
+  if (box.dataset.locked) return;
+  box.dataset.locked = "1";
+  const official = c.ail;
+  const hit = guess === official;
+  state.dxOfficial = official;
+  if (hit) {
+    state.score += 6;
+    SFX.quizOk();
+  } else SFX.quizBad();
+  [...box.children].forEach(el => {
+    if (el.textContent === official) el.classList.add("good");
+    else if (el.textContent === guess) el.classList.add("bad");
+    else el.style.opacity = ".55";
+  });
+  $("dxCard").innerHTML = patientHTML(c);
+  $("dxResult").className = "result on";
+  $("dxResult").innerHTML = `<b>Official diagnosis:</b> ${official}.<br>${c.part ? "Tissue: " + c.part + "<br>" : ""}${c.sys ? "System: " + c.sys + "<br>" : ""}${hit ? "Your name matched the chart. +6." : "Your name did not match. The chart still uses " + official + "."}`;
+  $("dxScore").textContent = `Score ${state.score}`;
+  $("dxGo").style.display = "block";
+  $("dxPrompt").innerHTML = `<b>Diagnosis locked.</b> Continue when you have read it.`;
 }
 
 function triageFor(c) {
@@ -1377,25 +1487,10 @@ function paintDebrief() {
         <div class="br"><span>Pair points after modifiers</span><b>+${g.pts}</b></div>
         <div class="br"><span>Case total (Q + pair)</span><b>+${L.casePts}</b></div>
       </div>`;
-    $("nextBtn").textContent = "Screen totals →";
-  } else if (page === 2) {
-    const t = state.totals;
-    $("debHud").textContent = "4.3 Totals";
-    $("result").innerHTML = `<span class="stepdot">Screen 4.3 · this case and the run</span>
-      <div class="break">
-        <div class="br"><span>1 · Patient</span><b>${c.name} · ${c.ail}</b></div>
-        <div class="br"><span>2 · Questions</span><b>${q.title || (q.ok ? "Correct" : "Miss")} · +${q.pts} · ${(q.bonus && q.bonus.title) || ""}</b></div>
-        <div class="br"><span>3 · Two cards</span><b>${hits}/2 hits · +${g.pts}</b></div>
-        <div class="br"><span>4 · Case total</span><b>+${L.casePts}</b></div>
-        <div class="br"><span>Patients read</span><b>${t.s1}</b></div>
-        <div class="br"><span>Questions right</span><b>${t.s2ok} / ${state.qSeen} · ${t.s2} pts</b></div>
-        <div class="br"><span>Pairs</span><b>${t.s3ok} clean · ${t.s3half} split · ${t.s3} pts</b></div>
-        <div class="br"><span>Running score</span><b>${state.score}</b></div>
-      </div>`;
     $("nextBtn").textContent = "Advantage cards →";
   } else {
-    $("debHud").textContent = "4.4 Advantage";
-    $("result").innerHTML = `<span class="stepdot">Screen 4.4</span><br><b>Tap one help card</b> or skip.`;
+    $("debHud").textContent = "4.3 Advantage";
+    $("result").innerHTML = `<span class="stepdot">Screen 4.3 · advantage</span><br><b>Tap one card, or skip.</b> Help lasts one visit, then it is spent. Clean pair (${hits}/2) offers 3 cards. Split offers 2. Miss offers 1. You cannot stack two advantages.`;
     const box = $("advPick");
     box.style.display = "grid";
     const pool = ADV_EASY.slice().sort(() => Math.random() - 0.5);
@@ -1420,11 +1515,11 @@ function takeAdvantage(card) {
   $("result").innerHTML += `<div class="active-bonus">Banked: ${card.title}</div>`;
   $("debScore").textContent = `Score ${state.score}`;
   $("nextBtn").textContent = "Next case →";
-  state.debPage = 4;
+  state.debPage = 3;
 }
 
 function advanceDebrief() {
-  if (state.debPage < 3) {
+  if (state.debPage < 2) {
     state.debPage += 1;
     paintDebrief();
     return;
@@ -1445,6 +1540,14 @@ function productLinks(c) {
 }
 
 function nextCase() {
+  state.dxOfficial = null;
+  state.resolved = false;
+  state.picked = [];
+  state.qStep = 0;
+  const dxBox = $("dxOpts");
+  if (dxBox) delete dxBox.dataset.locked;
+  const qBox = $("quizOpts");
+  if (qBox) delete qBox.dataset.locked;
   if (state.tier === "easy") {
     state.easyDone += 1;
     if (state.easyDone >= EASY_LEN) {
@@ -1509,13 +1612,6 @@ function finish() {
   $("sStreak").textContent = state.best;
   $("sSeen").textContent = `${state.seen} · Q ${state.qCorrect}/${state.qSeen}`;
   $("endTitle").textContent = acc >= 75 ? "Rounds look clean." : acc >= 50 ? "Solid floor, keep drilling." : "The deck taught you something.";
-  const t = state.totals;
-  const es = $("endScreens");
-  if (es) es.innerHTML = `<b>Totals by screen</b>
-    1 · Patient cards read: ${t.s1}<br>
-    2 · Questions: ${state.qCorrect}/${state.qSeen} correct · ${t.s2} pts<br>
-    3 · Two-card plays: ${t.s3ok} clean · ${t.s3half} split · ${t.s3} pts<br>
-    4 · Combined run: ${state.score} pts`;
   const mast = Object.entries(state.mastery).sort((a,b) => b[1]-a[1]).slice(0, 6)
     .map(([k,v]) => `${k} ${(100*v).toFixed(0)}%`).join(" · ");
   const extra = $("endNote");
